@@ -61,3 +61,13 @@ The proposed method achieves near-full-precision accuracy with significant commu
    ```bash
    git clone https://github.com/username/ClippedQuantFL.git
    cd ClippedQuantFL
+---
+###Citation
+If you find this repository helpful, please consider citing:
+@article{bozorgasl2024clippedquantfl,
+  author  = {Zavareh Bozorgasl and Hao Chen},
+  title   = {Communication-Efficient Federated Learning via Clipped Uniform Quantization},
+  journal = {arXiv preprint arXiv:2405.12832},
+  year    = {2024},
+  url     = {https://arxiv.org/abs/2405.12832}
+}
