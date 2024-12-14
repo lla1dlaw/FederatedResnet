@@ -40,7 +40,7 @@ The proposed method achieves near-full-precision accuracy with significant commu
 - **Clipping Threshold Optimization**:
   - Analytical method for optimal threshold selection.
 - **Quantization Strategies**:
-  - Deterministic and stochastic quantization examples.
+  - Deterministic and stochastic quantization.
 
 ---
 
