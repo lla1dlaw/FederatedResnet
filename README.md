@@ -72,8 +72,8 @@ If you find this repository helpful, please consider citing:
 @article{bozorgasl2024clippedquantfl,
   author  = {Zavareh Bozorgasl and Hao Chen},
   title   = {Communication-Efficient Federated Learning via Clipped Uniform Quantization},
-  journal = {arXiv preprint arXiv:2405.12832},
+  journal = {arXiv preprint arXiv:2405.13365},
   year    = {2024},
-  url     = {https://arxiv.org/abs/2405.12832}
+  url     = {https://arxiv.org/abs/2405.13365}
 }
 
