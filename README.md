@@ -7,7 +7,7 @@ The method integrates clipped uniform quantization with federated learning to en
 ---
 
 ## Links to the Paper
-- Available at: [arXiv](https://arxiv.org/abs/2405.12832)
+- Available at: [arXiv](https://arxiv.org/abs/2405.13365)
 
 
 ---
