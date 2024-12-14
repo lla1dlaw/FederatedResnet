@@ -64,6 +64,11 @@ The proposed method achieves near-full-precision accuracy with significant commu
 ---
 ### Citation
 If you find this repository helpful, please consider citing:
+
+### Citation
+If you find this repository helpful, please consider citing:
+
+```bibtex
 @article{bozorgasl2024clippedquantfl,
   author  = {Zavareh Bozorgasl and Hao Chen},
   title   = {Communication-Efficient Federated Learning via Clipped Uniform Quantization},
@@ -71,3 +76,4 @@ If you find this repository helpful, please consider citing:
   year    = {2024},
   url     = {https://arxiv.org/abs/2405.12832}
 }
+
