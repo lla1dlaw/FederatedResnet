@@ -62,8 +62,6 @@ The proposed method achieves near-full-precision accuracy with significant commu
    git clone https://github.com/username/ClippedQuantFL.git
    cd ClippedQuantFL
 ---
-### Citation
-If you find this repository helpful, please consider citing:
 
 ### Citation
 If you find this repository helpful, please consider citing:
