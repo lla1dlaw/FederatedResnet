@@ -4,6 +4,7 @@ This repository contains the code and resources to replicate the simulations pre
 **"Communication-Efficient Federated Learning via Clipped Uniform Quantization"**.  
 The method integrates clipped uniform quantization with federated learning to enhance communication efficiency without sacrificing accuracy.
 
+## Currently I am updating/completing the repo!
 ---
 
 ## Links to the Paper
