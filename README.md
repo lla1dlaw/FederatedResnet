@@ -5,9 +5,8 @@ This repository contains the code and resources to replicate the simulations pre
 The method integrates clipped uniform quantization with federated learning to enhance communication efficiency without sacrificing accuracy.
 
 ## Currently I am updating/completing the repo!
-
-In Main function, you can specify the type of the algoithm that one would like besides the intended dataset! I am going to make all the other necessary details and posting them here!
 ---
+In Main function, you can specify the type of the algoithm that one would like besides the intended dataset! I am going to make all the other necessary details and posting them here!
 
 ## Links to the Paper
 - Available at: [arXiv](https://arxiv.org/abs/2405.13365)
