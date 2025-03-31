@@ -19,6 +19,7 @@ This work presents a novel framework to reduce communication costs in federated 
 - **Optimal Clipping Thresholds**: Balances quantization and clipping noise to minimize information loss.
 - **Stochastic Quantization**: Enhances robustness by introducing diversity in client model initialization.
 - **Privacy Preservation**: Obviates the need for disclosing client-specific dataset sizes during aggregation.
+- **Error-Averaging**: Averaging based on inverse of mean of quantization error, instead of FedAvg.
 
 The proposed method achieves near-full-precision accuracy with significant communication savings, demonstrated through extensive simulations on the MNIST and CIFAR-10 datasets.
 
