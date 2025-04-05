@@ -9,6 +9,7 @@ The method integrates clipped uniform quantization with federated learning to en
 In Main function, you can specify the type of the algoithm that one would like besides the intended dataset! I am going to make all the other necessary details and posting them here!
 
 ## Links to the Paper
+- Available at: [IEEE](https://ieeexplore.ieee.org/document/10944759)
 - Available at: [arXiv](https://arxiv.org/abs/2405.13365)
 
  
