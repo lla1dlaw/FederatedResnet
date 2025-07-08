@@ -87,11 +87,10 @@ class Client():
             if target.size(0) == 1:
                 break
             input, target = inputs.to(self.device), target.to(self.device)
-            output,original_weights = self.model(input)
-            
+            output = self.model(input)
             loss = self.criterion(output, target.to(dtype=torch.int64))
             if type(output) is list:
-                output = output[0]
+                output = output
 
             # measure accuracy and record loss
             prec1, prec5 = accuracy(output.data, target, topk=(1, 2))
@@ -99,12 +98,9 @@ class Client():
             top1.update(prec1.item(), inputs.size(0))
             top5.update(prec5.item(), inputs.size(0))
 
-            # compute gradient
+            # compute gradient and optimize
             self.optimizer.zero_grad()
             loss.backward()
-
-            for name, weight in original_weights.items():
-                getattr(self.model, name).weight.data = weight
             self.optimizer.step()
        
         return losses.avg, top1.avg, top5.avg

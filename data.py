@@ -12,7 +12,7 @@ from PIL import Image
 import numpy as np
 
 
-_DATASETS_MAIN_PATH ='/home/zavarehbozorgasl/Feder/Clipped_FL/Zav/OCTAV_SQE/data'
+_DATASETS_MAIN_PATH ='./data/'
 
 
 #os.makedirs(_DATASETS_MAIN_PATH, exist_ok=True)
@@ -24,12 +24,6 @@ _dataset_path = {
     'imagenet': {
         'train': os.path.join(_DATASETS_MAIN_PATH, 'ImageNet/train'),
         'val': os.path.join(_DATASETS_MAIN_PATH, 'ImageNet/val')
-    },
-    'femnist': {
-        'train':os.path.join(_DATASETS_MAIN_PATH_Femnist,'train'),
-        'val': os.path.join(_DATASETS_MAIN_PATH_Femnist, 'test')
-        # 'train': os.path.join(_DATASETS_MAIN_PATH, 'femnist/data/niid_train_'),
-        # 'val': os.path.join(_DATASETS_MAIN_PATH, 'femnist/data/niid_test_')
     },
     'celeba': {
         'train': os.path.join(_DATASETS_MAIN_PATH, 'celeba/data/niid_train_'),

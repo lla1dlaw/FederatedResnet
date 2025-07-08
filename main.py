@@ -1,5 +1,6 @@
 #Simulation for the paper: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
+import pretty_errors
 import argparse
 import os
 import time
@@ -44,21 +45,21 @@ def parse_arguments():
 #                     help='dataset name or folder')
     parser.add_argument('--dataset', metavar='DATASET', default='MNIST', help='dataset name or folder')
     #mnistnet_quantized
-    parser.add_argument('--model', '-a', metavar='MODEL', default='mnist_FP', choices=model_names + ['RealResNet', 'ComplexResNet'],
+    parser.add_argument('--model', '-a', metavar='MODEL', default='mnist_FP', choices=model_names,
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: alexnet)')
-    parser.add_argument('--architecture_type', '--arch', metavar='ARCH', type=str, nargs='+', default=['WS'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
-    parser.add_argument('--complex_activation', '--act', metavar='ACT', type=str, nargs='+', default=['crelu'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
+    parser.add_argument('--architecture_type', '--arch', metavar='ARCH', type=str, nargs='+', default=['WS'], choices=['WS', 'DN', 'IB'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
+    parser.add_argument('--complex_activation', '--act', metavar='ACT', type=str, nargs='+', default=['crelu'], choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
     
     parser.add_argument('--input_size', type=int, default=28, help='image input size')
     parser.add_argument('--model_config', default='', help='additional architecture configuration')
-    parser.add_argument('--type', default='torch.cuda.FloatTensor', help='type of tensor - e.g torch.cuda.HalfTensor')
+    parser.add_argument('--type', default='torch.cuda.FloatTensor' if torch.cuda.is_available() else torch.Tensor, help='type of tensor - e.g torch.cuda.HalfTensor')
     parser.add_argument('--gpus', default='0', help='gpus used for training - e.g 0,1,3')
 # Setting the argument num_workers as a positive integer will turn on multi-process
 # data loading in torch.utils.data.DataLoader with the specified number of loader
 # worker processes:
     parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-    parser.add_argument('--epochs', default=2500, type=int, metavar='N',
+    parser.add_argument('--epochs', default=10, type=int, metavar='N',
                     help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -132,27 +133,32 @@ if __name__ == '__main__':
         args.save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     args.datano = '0' # Adding extra item the the list of arguments.
 
-    args.epochs = 200
-
-    
+    args.epochs = 50
 
     n = args.numclients
     __args = []
     
-    args.save = 'mnist_FP'
-    args.numclients = 30
-    __args.append(copy.copy(args)) 
     # You can add more configuration/settings here, so that you get several results!
-    args.save = 'SQE_MaxScalar'
-    args.numclients = 30
-    args.model = 'mnistnet_quantizedmaxscalar'
-    #__args.append(copy.copy(args))  
+    args.save = 'mnist_FP_1'
+    args.numclients = 10
+    args.model = 'mnist_FP'
+    __args.append(copy.copy(args))  
     
+    args.save = 'mnist_FP_2'
+    args.numclients = 5
+    args.model = 'mnist_FP'
+    __args.append(copy.copy(args))  
+
+    args.save = 'mnist_FP_3'
+    args.numclients = 30
+    args.model = 'mnist_FP'
+    __args.append(copy.copy(args))  
+
     for args in __args:
         print('\n args include \n',args)
         print(f'args.model {args.model}')
 
-    T = 10 #Repeating simulation for 10 runs (to have more stable/reliable results)
+    T = 5 #Repeating simulation for 10 runs (to have more stable/reliable results)
     for args in  __args:
         for trial in range (1,T+1):
             print(f'This is trial {trial}')
@@ -164,5 +170,5 @@ if __name__ == '__main__':
                 os.makedirs(save_path)
             server_ = Server(args)
             for epoch in range(args.start_epoch, args.epochs):
-                server_.train_epoch(epoch, per=None)
+                server_.train_epoch(epoch, percentage_of_clients=None)
 

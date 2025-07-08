@@ -1,4 +1,4 @@
-#Simulation for the paper: https://arxiv.org/abs/2405.13365
+#Simulation for the paper_of_clients: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
 import argparse
 import os
@@ -27,12 +27,6 @@ import pandas as pd
 class Server():
     def __init__(self, args):
         self.clients = []
-
-        self.SinvSQE = {} #sum of inverse of square error of the clients
-        self.ScaleFactorsAvg= {} #scale factor aggregation in the server (could be by SQE; or Naive Federated averaging)
-        self.SSQE = {} #sum of square errors (if it's layer based, it keeps the sum of square of all layers-multiplied by each client proportion)
-
-        self.AllSinvSQE = []
 
         # args = parser.parse_args()
         save_path = os.path.join(args.results_dir, args.save)
@@ -102,7 +96,7 @@ class Server():
                 input = inputs.to(self.device).type(self.args.type)
                 ###target_var = Variable(target)
                 # compute output
-                output,_ = self.model(input)
+                output = self.model(input)
 
             loss = self.criterion(output, target.to(dtype=torch.int64))
             if type(output) is list:
@@ -121,10 +115,10 @@ class Server():
         self.args.alpha = 1
         self.args.workmode = 'fullfull'
 
-    def train_epoch(self, epoch, per=None):
-        if per is None:
-            per=self.numclients
-        ppp=per/self.numclients
+    def train_epoch(self, epoch, percentage_of_clients=None):
+        if percentage_of_clients is None:
+            percentage_of_clients=self.numclients
+        ppp=percentage_of_clients/self.numclients
         sigma = self.args.alpha
         mode = self.args.workmode
         flag = True
@@ -135,67 +129,27 @@ class Server():
         valtop1 = AverageMeter()
         valtop5 = AverageMeter()
 
-
-    # Assuming self.model is already transferred to the appropriate device and configured
-        for name, module in self.model.named_modules():
-            if isinstance(module, (nn.Conv2d, nn.Linear)):  # You can adjust this condition based on which layers you are interested in
-                self.SinvSQE[name] = 0
-                #self.ScaleFactorsAvg[name] = 0
-                #self.SSQE[name] = 0
-
-        # Create a dataframe to store epoch data
-        epoch_data = []
-
+        # train clients
         for i in range(self.numclients):
-        # for i in trange(self.numclients):
             client = self.clients[i]
-            # print(f'\npars BEFORE training: {list(self.clients[i].model.parameters())[0][0]}\n\n')
             loss, top1, top5 = client.train_epoch(epoch)
 
-            # Update the sum of inverse SE for each layer
-            for name, sqe_value in client.SQE.items():
-                self.SinvSQE[name] += 1 / sqe_value if sqe_value != 0 else 0 
-
-            #print(client.SQE)
+            # update metrics
             trainloss.update(loss)
             traintop1.update(top1)
             traintop5.update(top5)
 
+        print("Server epoch", epoch+1, "start")
 
-
-       
-        if True:
-            print("Server epoch", epoch+1, "start")
-            with torch.no_grad():
-                # for client in self.clients:
-                for i in random.sample(range(self.numclients), per):
-                    client = self.clients[i]
-
-                    client_scale_factors = client.model.scale_factors
-
-                    #print(f'Client model is {client.model}')
-                    #break
-                    client_quantized_weights= client.model.quantized_weights
-
-                    #print(f' Weights for FC2 are {client_quantized_weights['fc2']}')
-                    #break
-                    if flag:
-                        self.model.load_state_dict(copy.deepcopy(client.model.state_dict()))
-                        for name, module in self.model.named_modules():
-                            if isinstance(module, (nn.Conv2d, nn.Linear)):
-                                 module.weight.data = client_quantized_weights[name]*client_scale_factors[name] * (1/(client.SQE[name]*self.SinvSQE[name]))#* (client.proportion/ppp)# 
-                        flag = False
-                      
-                    else:
-                     
-                         for name, module in self.model.named_modules():
-                            if isinstance(module, (nn.Conv2d, nn.Linear)):
-                          
-                                 scaled_quantized_weights = client_scale_factors[name] * client_quantized_weights[name]
-                                 # Aggregate the scaled quantized weights
-                                 module.weight.data += (scaled_quantized_weights *(1/(client.SQE[name]*self.SinvSQE[name]))).to(self.device)  
-            for client in self.clients:
-                client.localupdate(self.model.state_dict(), sigma=sigma, mode=mode)
+        # Federated Averaging (MAKE SURE YOU CHANGE THIS TO THE RIGHT KIND OF COMPLEX AVERAGING)
+        global_dict = self.model.state_dict()
+        for k in global_dict.keys():
+            global_dict[k] = torch.stack([self.clients[i].model.state_dict()[k] for i in range(self.numclients)], 0).mean(0)
+        self.model.load_state_dict(global_dict)
+        
+        # distribute the updated model to all clients
+        for client in self.clients:
+            client.localupdate(self.model.state_dict(), sigma=sigma, mode=mode)
 
         valloss, valtop1, valtop5 = self.val(self.val_loader, epoch)
         self.results.add(epoch=epoch + 1, train_loss=trainloss.avg, val_loss=valloss,
