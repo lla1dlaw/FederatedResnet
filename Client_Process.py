@@ -20,6 +20,7 @@ from ast import literal_eval
 from torchvision.utils import save_image
 import copy
 from scipy.stats import norm
+from models import ComplexResNet, RealResNet
 
 class Client():
     def __init__(self, clientid, train_data, args, proportion=0.01, init_model=None):
@@ -29,19 +30,23 @@ class Client():
 
         save_path = os.path.join(self.args.results_dir, self.args.save)
         self.device = args.device
+        self.model = None # placeholder for scope
+        model_config = []
+        if self.args.model == "ComplexResNet":
+            self.model = ComplexResNet(self.args.arch, self.args.act, self.args.learn_imag)
+            model_config.append(self.args.model)
+            model_config.append(self.args.arch)
+            model_config.append(self.args.act)
+            model_config.append(self.args.learn_imag)
 
-        model = models.__dict__[self.args.model]
+        elif self.args.model == "RealResNet":
+            self.model = RealResNet(self.args.arch)
+            model_config.append(self.args.model)
+            model_config.append(self.args.arch)
 
-        #print(f'self.args.model {self.args.model}')
-        model_config = {'input_size': self.args.input_size, 'dataset': self.args.dataset}
-
-        if self.args.model_config != '':
-            model_config = dict(model_config, **literal_eval(self.args.model_config))
-
-        model = model(**model_config)
         logging.info("Client %d: created model with configuration: %s", self.clientid, model_config)
 
-        num_parameters = sum([l.nelement() for l in model.parameters()])
+        num_parameters = sum([l.nelement() for l in self.model.parameters()])
         logging.info("number of parameters: %d", num_parameters)
 
         # Data loading code
@@ -51,24 +56,24 @@ class Client():
             'eval': get_transform(self.args.dataset,
                                 input_size=self.args.input_size, augment=False)
         }
-        transform = getattr(model, 'input_transform', default_transform)
-        regime = getattr(model, 'regime', {0: {'optimizer': self.args.optimizer,
+        transform = getattr(self.model, 'input_transform', default_transform)
+        regime = getattr(self.model, 'regime', {0: {'optimizer': self.args.optimizer,
                                            'lr': self.args.lr,
                                            'momentum': self.args.momentum,
                                            'weight_decay': self.args.weight_decay}})
         # define loss function (criterion) and optimizer
-        self.criterion = getattr(model, 'criterion', nn.CrossEntropyLoss)()
+        self.criterion = getattr(self.model, 'criterion', nn.CrossEntropyLoss)()
         self.criterion.type(self.args.type)
-        model.type(self.args.type)
+        self.model.type(self.args.type)
         self.train_loader = torch.utils.data.DataLoader(
             train_data,
             batch_size=self.args.batch_size, shuffle=True,
             num_workers=self.args.workers, pin_memory=True)
 
-        self.optimizer = torch.optim.SGD(model.parameters(), lr=self.args.lr)
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr)
 
 
-        self.model = model.to(self.device)
+        self.model = self.model.to(self.device)
         with torch.no_grad():
             if init_model is not None:
                 for (p, p_) in zip(self.model.parameters(), init_model.parameters()):

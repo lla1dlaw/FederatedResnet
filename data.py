@@ -116,9 +116,25 @@ def distribute(dataset, distribution, numclients, numclasses):
         index += 1  #moving to the next data sample in the dataset
     return indexes_  #filled with indices of the dataset, divided among clients according to the specified distribution
 
-def get_dataset(name, split='train', transform=None,
-                target_transform=None, download=True, distribution=None, numclients=4, dataset_path=None):
+def get_dataset(name, split='train', download=True, distribution=None, numclients=4, dataset_path=None):
     train = (split == 'train')
+
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    target_transform = None
+
+
+    transform = transform_train if train else transform_test
+
     print('get_dataset--> trainFlag: ',train)
     if name == 'cifar10':
         print("CIFAR-10 dataset is being initialized.")
@@ -131,7 +147,7 @@ def get_dataset(name, split='train', transform=None,
     elif name == 'cifar100':
         dataset = datasets.CIFAR100(root=_dataset_path['cifar100'],
                                     train=train,
-                                    transform=transform,
+                                    transform=transform_test,
                                     target_transform=target_transform,
                                     download=download)
         numclasses = 100

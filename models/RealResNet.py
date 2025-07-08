@@ -11,6 +11,7 @@ import torch.nn.functional as F
 from torch.nn.init import orthogonal_
 import math
 
+__all__ = ['RealResNet']
 
 def init_weights(m):
     """
@@ -114,4 +115,3 @@ class RealResNet(nn.Module):
         x = self.fc(x)
         return x
 
-__all__ = ['RealResNet']

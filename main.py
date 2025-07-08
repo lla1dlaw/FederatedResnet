@@ -32,23 +32,21 @@ print("Formatted date and time:", formatted_date_time)
 
 
 
-model_names = sorted(name for name in models.__dict__
-                     if name.islower() and not name.startswith("__")
-                     and callable(models.__dict__[name]))
+model_names = ['RealResNet', 'ComplexResNet']
 print(model_names)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='PyTorch ConvNet Training')
 
     parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./results', help='results dir')
     parser.add_argument('--save', metavar='SAVE', default='', help='saved folder')
-# parser.add_argument('--dataset', metavar='DATASET', default='imagenet',
-#                     help='dataset name or folder')
-    parser.add_argument('--dataset', metavar='DATASET', default='MNIST', help='dataset name or folder')
-    #mnistnet_quantized
-    parser.add_argument('--model', '-a', metavar='MODEL', default='mnist_FP', choices=model_names,
+    parser.add_argument('--dataset', metavar='DATASET', default='cifar10', help='dataset name or folder')
+    parser.add_argument('--model', '-a', metavar='MODEL', default='RealResNet', choices=model_names,
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: alexnet)')
-    parser.add_argument('--architecture_type', '--arch', metavar='ARCH', type=str, nargs='+', default=['WS'], choices=['WS', 'DN', 'IB'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
-    parser.add_argument('--complex_activation', '--act', metavar='ACT', type=str, nargs='+', default=['crelu'], choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
+    parser.add_argument('--architecture_type', '-arch', metavar='ARCH', type=str, nargs='+', default=['WS'], choices=['WS', 'DN', 'IB'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
+    parser.add_argument('--complex_activation', '-act', metavar='ACT', type=str, nargs='+', default=['crelu'], choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
+    parser.add_argument('--learn_imaginary', '-learn_imag',  action='store_true', help='Enable learning the imaginary component of real-valued input. If disabled, imaginary component is set to 0.')
     
     parser.add_argument('--input_size', type=int, default=28, help='image input size')
     parser.add_argument('--model_config', default='', help='additional architecture configuration')
@@ -63,7 +61,7 @@ def parse_arguments():
                     help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-    parser.add_argument('-b', '--batch-size', default=64, type=int,
+    parser.add_argument('-b', '--batch-size', default=128, type=int,
                     metavar='N', help='mini-batch size (default: 64)')
     parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
                     help='optimizer function used')
@@ -95,6 +93,9 @@ def parse_arguments():
 def validate_arguments(args):
     if args.batch_size < 1:
         raise ValueError("Batch size must be a positive integer")
+
+    if args.model == 'RealResNet' and args.learn_imaginary:
+        raise ValueError("RealResNets cannot learn an imaginary component. Remove '--learn_imaginary' if you wish to use RealResNet")
     
 
 
@@ -139,20 +140,21 @@ if __name__ == '__main__':
     __args = []
     
     # You can add more configuration/settings here, so that you get several results!
-    args.save = 'mnist_FP_1'
+    args.arch = 'WS'
+    args.save = f'RealResNet-{args.arch}'
     args.numclients = 10
-    args.model = 'mnist_FP'
-    __args.append(copy.copy(args))  
-    
-    args.save = 'mnist_FP_2'
-    args.numclients = 5
-    args.model = 'mnist_FP'
+    args.model = 'RealResNet'
     __args.append(copy.copy(args))  
 
-    args.save = 'mnist_FP_3'
-    args.numclients = 30
-    args.model = 'mnist_FP'
+    # You can add more configuration/settings here, so that you get several results!
+    args.arch = 'WS'
+    args.act = 'crelu'
+    args.learn_imag = True
+    args.save = f"ComplexResNet-{args.arch}-{args.act}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
+    args.numclients = 10
+    args.model = 'ComplexResNet'
     __args.append(copy.copy(args))  
+
 
     for args in __args:
         print('\n args include \n',args)
@@ -169,6 +171,7 @@ if __name__ == '__main__':
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
             server_ = Server(args)
+
             for epoch in range(args.start_epoch, args.epochs):
                 server_.train_epoch(epoch, percentage_of_clients=None)
 

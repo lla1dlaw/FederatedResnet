@@ -1,31 +1,18 @@
 #Simulation for the paper_of_clients: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
-import argparse
 import os
-import time
-import logging
 import torch
 import torch.nn as nn
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.optim
-import torch.utils.data
-import models
-from torch.autograd import Variable
 from data import get_dataset
 from preprocess import get_transform
 from utils import *
-from datetime import datetime
-from ast import literal_eval
-from torchvision.utils import save_image
 import copy
-from tqdm import trange
-import random
 from Client_Process import Client
-import pandas as pd
+from models import ComplexResNet, RealResNet
 
 class Server():
     def __init__(self, args):
+        self.args = args
         self.clients = []
 
         # args = parser.parse_args()
@@ -34,8 +21,7 @@ class Server():
         
         results_file = os.path.join(save_path, f'{args.trial}.%s')
         self.results = ResultsLog(results_file % 'csv', results_file % 'html')
-        #print(f'this is arg model {args.model}')
-        model = models.__dict__[args.model]
+
         self.device = args.device
         default_transform = {
             'train': get_transform(args.dataset,
@@ -43,30 +29,31 @@ class Server():
             'eval': get_transform(args.dataset,
                               input_size=args.input_size, augment=False)
         }
-        transform = getattr(model, 'input_transform', default_transform)
 
         
-        train_data = get_dataset(args.dataset, 'train', transform['train'], \
-                                 distribution= None, numclients=args.numclients,\
-                                     dataset_path=args.datano)
+        train_data = get_dataset(args.dataset, 'train', distribution= None, numclients=args.numclients, dataset_path=args.datano)
+
         if args.numclients == 1:
             train_data=[torch.utils.data.ConcatDataset(train_data)]
-        val_data = torch.utils.data.ConcatDataset(get_dataset(args.dataset, 'val',\
-                                                  transform['eval'], distribution=None,\
-                                                  numclients=1, dataset_path=args.datano))
+        val_data = torch.utils.data.ConcatDataset(get_dataset(args.dataset, 'val',  distribution=None, numclients=1, dataset_path=args.datano))
         self.numclients = args.numclients
         self.alg = args.serveralg
-        # self.model_1 = torch.load('model_20.pth')
-        # print(self.model_1)
-        self.model = models.__dict__[args.model]
-        model_config = {'input_size': args.input_size, 'dataset': args.dataset}
 
-        if args.model_config != '':
-            model_config = dict(model_config, **literal_eval(args.model_config))
+        self.model = None # placeholder for scope
+        model_config = []
+        if self.args.model == "ComplexResNet":
+            self.model = ComplexResNet(self.args.arch, self.args.act, self.args.learn_imag)
+            model_config.append(self.args.model)
+            model_config.append(self.args.arch)
+            model_config.append(self.args.act)
+            model_config.append(self.args.learn_imag)
 
-        self.model = self.model(**model_config)
+        elif self.args.model == "RealResNet":
+            self.model = RealResNet(self.args.arch)
+            model_config.append(self.args.model)
+            model_config.append(self.args.arch)
 
-        self.criterion = getattr(model, 'criterion', nn.CrossEntropyLoss)()
+        self.criterion = getattr(self.model, 'criterion', nn.CrossEntropyLoss)()
         self.criterion.type(args.type)
         self.model.type(args.type)
         self.model=self.model.to(self.device) 
@@ -79,7 +66,6 @@ class Server():
             val_data,
             batch_size=1024, shuffle=False,
             num_workers=args.workers, pin_memory=True)
-        self.args = args
         #self.device = []
 
 
@@ -94,7 +80,6 @@ class Server():
 
             with torch.no_grad():
                 input = inputs.to(self.device).type(self.args.type)
-                ###target_var = Variable(target)
                 # compute output
                 output = self.model(input)
 
