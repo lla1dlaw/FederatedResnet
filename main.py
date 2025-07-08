@@ -44,8 +44,10 @@ def parse_arguments():
 #                     help='dataset name or folder')
     parser.add_argument('--dataset', metavar='DATASET', default='MNIST', help='dataset name or folder')
     #mnistnet_quantized
-    parser.add_argument('--model', '-a', metavar='MODEL', default='mnist_FP', choices=model_names,
+    parser.add_argument('--model', '-a', metavar='MODEL', default='mnist_FP', choices=model_names + ['RealResNet', 'ComplexResNet'],
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: alexnet)')
+    parser.add_argument('--architecture_type', '--arch', metavar='ARCH', type=str, nargs='+', default=['WS'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
+    parser.add_argument('--complex_activation', '--act', metavar='ACT', type=str, nargs='+', default=['crelu'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
     
     parser.add_argument('--input_size', type=int, default=28, help='image input size')
     parser.add_argument('--model_config', default='', help='additional architecture configuration')

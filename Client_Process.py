@@ -27,8 +27,6 @@ class Client():
         self.args = args
         self.clientid = clientid
 
-        self.SQE = {}
-
         save_path = os.path.join(self.args.results_dir, self.args.save)
         self.device = args.device
 
@@ -69,7 +67,6 @@ class Client():
 
         self.optimizer = torch.optim.SGD(model.parameters(), lr=self.args.lr)
 
-#        logging.info('training regime: %s', regime)
 
         self.model = model.to(self.device)
         with torch.no_grad():
@@ -85,7 +82,7 @@ class Client():
         losses = AverageMeter()
         top1 = AverageMeter()
         top5 = AverageMeter()
-        for i, (inputs, target) in enumerate(self.train_loader):
+        for _, (inputs, target) in enumerate(self.train_loader):
 
             if target.size(0) == 1:
                 break
@@ -110,25 +107,8 @@ class Client():
                 getattr(self.model, name).weight.data = weight
             self.optimizer.step()
        
-        self.compute_squared_error() 
-        #print(f'SQE of this client is {self.SQE}')
         return losses.avg, top1.avg, top5.avg
 
-
-    def compute_squared_error(self):
-        # Reset the SE for each layer at the start of the computation
-        self.SQE = {name: 0 for name in self.model.layer_bitwidths.keys()}
-
-        for name, weight in self.model.original_weights.items():
-            if name in self.model.quantized_weights:
-                original = weight
-                quantized = self.model.quantized_weights[name] * self.model.scale_factors[name]
-                squared_error = torch.sum((original - quantized) ** 2)
-                self.SQE[name] = squared_error.item()  # Store the SE for each layer
-
-        return 1 #self.SQE.values()  # Return the total SE as the sum of individual layer SEs
-
-    
     
     def train_epoch(self, epoch):
         self.optimizer = adjust_optimizer(self.optimizer, epoch, self.regime)

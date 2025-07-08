@@ -10,4 +10,7 @@ from .mnistSTOCH_quantizedmaxscalar import *
 from .mnistSTOCH_quantizedmaxscalar import *
 #from .mnist_FP import *
 
+from .ComplexResNet import *
+from .RealResNet import * 
+
 
