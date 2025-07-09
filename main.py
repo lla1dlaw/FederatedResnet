@@ -1,5 +1,7 @@
 #Simulation for the paper: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
+
+import pretty_errors
 import argparse
 import os
 import torch
@@ -14,6 +16,8 @@ import importlib
 import models
 importlib.reload(models)
 from datetime import datetime
+from tqdm import tqdm
+
 now = datetime.now()
 # Print the current date and time with a specific format
 formatted_date_time = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -70,6 +74,8 @@ def parse_arguments():
                     help='system working mode')
     parser.add_argument('--alpha', type=float, default=0.2,
                     help='client parameters updating algorithm')
+
+    parser.add_argument('--tqdm_during_training', '-tqdm', action='store_true', help='Use tqdm progress bar during training to show global training progress.')
     
     args = parser.parse_args()
     validate_arguments(args) #Validate argument values early on to catch potential errors before they propagate further into the system
@@ -130,6 +136,7 @@ if __name__ == '__main__':
     args.numclients = 10
     args.model = 'RealResNet'
     args.agg = 'arethmetic'
+    args.tqdm = True
     __args.append(copy.copy(args))  
 
     # You can add more configuration/settings here, so that you get several results!
@@ -140,25 +147,29 @@ if __name__ == '__main__':
     args.numclients = 10
     args.model = 'ComplexResNet'
     args.agg = 'arethmetic'
+    args.tqdm = True
     __args.append(copy.copy(args))  
 
+    
+    num_trials = 1 # Repeat simulation for <T> runs (to have more stable/reliable results)
 
-    for args in __args:
-        print('\n args include \n',args)
-        print(f'args.model {args.model}')
-
-    T = 1 #Repeating simulation for 10 runs (to have more stable/reliable results)
     for args in  __args:
-        for trial in range (1,T+1):
-            print(f'This is trial {trial}')
-        
+        prompt = f"{'='} Begining Training for model: {args.save}"
+
+        print(f"\n\nBegining Training for model: {args.save}")
+        print(f"{'='*len(prompt)}\n")
+
+        for trial in range (1, num_trials+1):
+            print(f'Starting Trial #{trial}')
             args.trial = f"results_tr{trial}"
-        # args.results_dir = 'results_niid_per0.1'
             save_path = os.path.join(args.results_dir, args.save)
+
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
             server_ = Server(args)
 
-            for epoch in range(args.start_epoch, args.epochs):
+            epochs = tqdm(range(args.start_epoch, args.epochs), desc=args.save, dynamic_ncols=True) if args.tqdm else range(args.start_epoch, args.epochs) 
+
+            for epoch in epochs:
                 server_.train_epoch(epoch, percentage_of_clients=None)
 

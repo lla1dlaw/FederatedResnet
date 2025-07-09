@@ -4,7 +4,6 @@ import os
 import torch
 import torch.nn as nn
 from data import get_dataset
-from preprocess import get_transform
 from utils import *
 import copy
 from Client_Process import Client
@@ -54,7 +53,7 @@ class Server():
         self.val_loader = torch.utils.data.DataLoader(
             val_data,
             batch_size=1024, shuffle=False,
-            num_workers=args.workers, pin_memory=True)
+            num_workers=1, pin_memory=torch.cuda.is_available())
 
 
     def val(self, val_loader):
@@ -122,7 +121,7 @@ class Server():
         return torch.stack(tensors, 0).mean(0)
 
 
-    def aggregate_clients(self, strategy: str) -> torch.Tensor:
+    def aggregate_clients(self, strategy: str) -> dict[str, torch.Tensor]:
         """Aggregates the parameters from all clients.
 
         Uses the specified strategy to aggregate client's parameters. 
@@ -131,7 +130,7 @@ class Server():
             strategy: A string representing the averaging teqnique used to aggregate client parameters. 
 
         Returns:
-            A tensor holding the aggregated parameters.
+            The state dictionary of the new glbal model.
         """
         
         global_dict = self.model.state_dict()
@@ -155,6 +154,8 @@ class Server():
 
         else:
             raise ValueError(f"Unknown averaging strategy: {strategy}")
+
+        return global_dict
                 
 
     def train_epoch(self, epoch, percentage_of_clients=None):

@@ -44,7 +44,6 @@ class Client():
             'eval': get_transform(self.args.dataset,
                                 input_size=self.args.input_size, augment=False)
         }
-        transform = getattr(self.model, 'input_transform', default_transform)
         regime = getattr(self.model, 'regime', {0: {'optimizer': self.args.optimizer,
                                            'lr': self.args.lr,
                                            'momentum': self.args.momentum,
@@ -56,7 +55,7 @@ class Client():
         self.train_loader = torch.utils.data.DataLoader(
             train_data,
             batch_size=self.args.batch_size, shuffle=True,
-            num_workers=self.args.workers, pin_memory=True)
+            num_workers=1, pin_memory=torch.cuda.is_available())
 
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.9, nesterov=True)
 
