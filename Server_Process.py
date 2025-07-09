@@ -1,5 +1,7 @@
 #Simulation for the paper_of_clients: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
+
+from tqdm import tqdm
 import os
 import torch
 import torch.nn as nn
@@ -61,7 +63,7 @@ class Server():
         losses = AverageMeter()
         top1 = AverageMeter()
         top5 = AverageMeter()
-        for i, (inputs, target) in enumerate(val_loader):
+        for _, (inputs, target) in enumerate(val_loader):
             target = target.to(self.device) 
 
             with torch.no_grad():
@@ -158,10 +160,7 @@ class Server():
         return global_dict
                 
 
-    def train_epoch(self, epoch, percentage_of_clients=None):
-        if percentage_of_clients is None:
-            percentage_of_clients=self.numclients
-
+    def train_epoch(self, epoch):
         # define metrics collectors
         sigma = self.args.alpha
         mode = self.args.workmode
@@ -172,8 +171,11 @@ class Server():
         valtop1 = AverageMeter()
         valtop5 = AverageMeter()
 
+        print(f"-- Training Epoch {epoch} --")
+        clients_iterator = tqdm(range(self.numclients), desc='Training Clients', dynamic_ncols=True) if self.args.tqdm_mode == 'local' else range(self.numclients)
+
         # train clients over 1 epoch
-        for i in range(self.numclients):
+        for i in clients_iterator:
             client = self.clients[i]
             loss, top1, top5 = client.train_epoch(epoch)
 
@@ -181,10 +183,8 @@ class Server():
             trainloss.update(loss)
             traintop1.update(top1)
             traintop5.update(top5)
-
-        print("Server epoch", epoch+1, "start")
-
-        # Federated Averaging (MAKE SURE YOU CHANGE THIS TO THE RIGHT KIND OF COMPLEX AVERAGING)
+        
+        # aggregate client parameters
         global_dict = self.aggregate_clients(self.args.aggregation_strategy)
         self.model.load_state_dict(global_dict)
         

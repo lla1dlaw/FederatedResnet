@@ -75,7 +75,7 @@ def parse_arguments():
     parser.add_argument('--alpha', type=float, default=0.2,
                     help='client parameters updating algorithm')
 
-    parser.add_argument('--tqdm_during_training', '-tqdm', action='store_true', help='Use tqdm progress bar during training to show global training progress.')
+    parser.add_argument('--tqdm_mode', '-tqdm', type=str, choices=['global', 'local'], help='Use tqdm progress bar during training to show global training progress.')
     
     args = parser.parse_args()
     validate_arguments(args) #Validate argument values early on to catch potential errors before they propagate further into the system
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     args.numclients = 10
     args.model = 'RealResNet'
     args.agg = 'arethmetic'
-    args.tqdm = True
+    args.tqdm_mode = 'local'
     __args.append(copy.copy(args))  
 
     # You can add more configuration/settings here, so that you get several results!
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     args.numclients = 10
     args.model = 'ComplexResNet'
     args.agg = 'arethmetic'
-    args.tqdm = True
+    args.tqdm_mode = 'local'
     __args.append(copy.copy(args))  
 
     
@@ -168,8 +168,8 @@ if __name__ == '__main__':
                 os.makedirs(save_path)
             server_ = Server(args)
 
-            epochs = tqdm(range(args.start_epoch, args.epochs), desc=args.save, dynamic_ncols=True) if args.tqdm else range(args.start_epoch, args.epochs) 
+            epochs = tqdm(range(args.start_epoch, args.epochs), desc=args.save, dynamic_ncols=True) if args.tqdm_mode == 'global' else range(args.start_epoch, args.epochs) 
 
             for epoch in epochs:
-                server_.train_epoch(epoch, percentage_of_clients=None)
+                server_.train_epoch(epoch)
 
