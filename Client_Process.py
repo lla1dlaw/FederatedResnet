@@ -1,25 +1,14 @@
 #Simulation for the paper: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
-import argparse
 import os
-import time
 import logging
 import torch
 import torch.nn as nn
 import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.optim
 import torch.utils.data
-import models
-from torch.autograd import Variable
-from data import get_dataset
 from preprocess import get_transform
 from utils import *
-from datetime import datetime
-from ast import literal_eval
-from torchvision.utils import save_image
 import copy
-from scipy.stats import norm
 from models import ComplexResNet, RealResNet
 
 class Client():
@@ -30,7 +19,6 @@ class Client():
 
         save_path = os.path.join(self.args.results_dir, self.args.save)
         self.device = args.device
-        self.model = None # placeholder for scope
         model_config = []
         if self.args.model == "ComplexResNet":
             self.model = ComplexResNet(self.args.arch, self.args.act, self.args.learn_imag)
@@ -39,7 +27,7 @@ class Client():
             model_config.append(self.args.act)
             model_config.append(self.args.learn_imag)
 
-        elif self.args.model == "RealResNet":
+        else: # defaults to RealResNet
             self.model = RealResNet(self.args.arch)
             model_config.append(self.args.model)
             model_config.append(self.args.arch)
@@ -70,7 +58,7 @@ class Client():
             batch_size=self.args.batch_size, shuffle=True,
             num_workers=self.args.workers, pin_memory=True)
 
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr)
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.9, nesterov=True)
 
 
         self.model = self.model.to(self.device)

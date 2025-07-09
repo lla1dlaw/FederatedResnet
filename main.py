@@ -1,24 +1,13 @@
 #Simulation for the paper: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
-import pretty_errors
 import argparse
 import os
-import time
-import logging
 import torch
-import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
-import torch.optim
 import torch.utils.data
-import bokeh
-from torch.autograd import Variable
-from data import get_dataset
-from preprocess import get_transform
 from utils import *
 from datetime import datetime
-from ast import literal_eval
-from torchvision.utils import save_image
 from Server_Process import Server
 import copy
 import importlib
@@ -28,16 +17,12 @@ from datetime import datetime
 now = datetime.now()
 # Print the current date and time with a specific format
 formatted_date_time = now.strftime("%Y-%m-%d %H:%M:%S")
-print("Formatted date and time:", formatted_date_time)
-
-
+print("-- Script Started at:", formatted_date_time, "--")
 
 model_names = ['RealResNet', 'ComplexResNet']
-print(model_names)
-
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='PyTorch ConvNet Training')
+    parser = argparse.ArgumentParser(description='PyTorch ResNet Training')
 
     parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./results', help='results dir')
     parser.add_argument('--save', metavar='SAVE', default='', help='saved folder')
@@ -79,7 +64,7 @@ def parse_arguments():
                     help='evaluate model FILE on validation set')
     parser.add_argument('-n', '--numclients', type=int, default=4,
                     help='number of clients')
-    parser.add_argument('--serveralg', type=str, default='Naive',
+    parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arethmetic', choices=['arethmetic', 'circular', 'hybrid'],
                     help='server parameters updating algorithm')
     parser.add_argument('--workmode', type=str, default='fullfull',
                     help='system working mode')
@@ -134,7 +119,7 @@ if __name__ == '__main__':
         args.save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     args.datano = '0' # Adding extra item the the list of arguments.
 
-    args.epochs = 50
+    args.epochs = 200
 
     n = args.numclients
     __args = []
@@ -144,6 +129,7 @@ if __name__ == '__main__':
     args.save = f'RealResNet-{args.arch}'
     args.numclients = 10
     args.model = 'RealResNet'
+    args.agg = 'arethmetic'
     __args.append(copy.copy(args))  
 
     # You can add more configuration/settings here, so that you get several results!
@@ -153,6 +139,7 @@ if __name__ == '__main__':
     args.save = f"ComplexResNet-{args.arch}-{args.act}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
     args.numclients = 10
     args.model = 'ComplexResNet'
+    args.agg = 'arethmetic'
     __args.append(copy.copy(args))  
 
 
@@ -160,7 +147,7 @@ if __name__ == '__main__':
         print('\n args include \n',args)
         print(f'args.model {args.model}')
 
-    T = 5 #Repeating simulation for 10 runs (to have more stable/reliable results)
+    T = 1 #Repeating simulation for 10 runs (to have more stable/reliable results)
     for args in  __args:
         for trial in range (1,T+1):
             print(f'This is trial {trial}')

@@ -6,15 +6,9 @@ import torch
 import logging.config
 import shutil
 import pandas as pd
-import bokeh
 from bokeh.io import output_file, save, show
 from bokeh.plotting import figure
 from bokeh.layouts import column
-#from bokeh.charts import Line, defaults
-#
-#defaults.width = 800
-#defaults.height = 400
-#defaults.tools = 'pan,box_zoom,wheel_zoom,box_select,hover,resize,reset,save'
 
 
 def setup_logging(log_file='log.txt'):
@@ -118,6 +112,26 @@ __optimizers = {
 }
 
 
+
+def adjust_learning_rate(optimizer, epoch):
+    """Sets the learning rate according to the schedule from the paper."""
+    if epoch < 10:
+        lr = 0.01
+    elif epoch < 100:
+        lr = 0.1
+    elif epoch < 120:
+        lr = 0.01
+    elif epoch < 150:
+        lr = 0.001
+    else: # epoch >= 150
+        lr = 0.0001
+    
+    for param_group in optimizer.param_groups:
+        if param_group['lr'] != lr:
+            logging.info(f"Adjusting learning rate to {lr} at epoch {epoch+1}")
+            param_group['lr'] = lr
+
+
 def adjust_optimizer(optimizer, epoch, config):
     """Reconfigures the optimizer according to epoch and config dict"""
     def modify_optimizer(optimizer, setting):
@@ -140,7 +154,7 @@ def adjust_optimizer(optimizer, epoch, config):
         for e in range(epoch + 1):  # run over all epochs - sticky setting
             if e in config:
                 optimizer = modify_optimizer(optimizer, config[e])
-
+    adjust_learning_rate(optimizer, epoch) # adjust the learning rate to the learning rate schedule based on the epoch
     return optimizer
 
 
