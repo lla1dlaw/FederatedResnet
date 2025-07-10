@@ -25,6 +25,8 @@ def parse_arguments():
                         help='Server parameter aggregation strategy.')
     parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
                         help='optimizer function used')
+    parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
+                        help='momentum')
     # --- Training Control ---
     parser.add_argument('--epochs', default=200, type=int, metavar='N',
                         help='Number of total global epochs to run.')
