@@ -125,7 +125,7 @@ if __name__ == '__main__':
         args.save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     args.datano = '0' # Adding extra item the the list of arguments.
 
-    args.epochs = 200
+    args.epochs = 2
 
     n = args.numclients
     __args = []
