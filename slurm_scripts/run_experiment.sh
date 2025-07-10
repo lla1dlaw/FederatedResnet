@@ -1,5 +1,19 @@
 #!/bin/bash
-#
+#SBATCH --job-name=Federated-ResNet-Job
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:l40:1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=48:00:00
+#SBATCH --output=slurm_logs/slurm-%A_%a.out
+#SBATCH --array=1-4
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=liamlaidlaw@boisestate.edu
+
+# ==============================================================================
+#                      Federated Learning Experiment Script
+# ==============================================================================
 # This is a reusable SLURM script for running a federated learning experiment.
 # It accepts five command-line arguments:
 #   1. Architecture (e.g., 'WS', 'DN', 'IB')
@@ -9,7 +23,8 @@
 #   5. Number of Trials (e.g., 3)
 #
 # Example Usage: sbatch run_experiment.sh WS 10 200 crelu 3
-#
+# ==============================================================================
+
 set -e # Exit immediately if a command exits with a non-zero status.
 
 # --- Argument Validation ---
@@ -19,33 +34,21 @@ if [ "$#" -ne 5 ]; then
   exit 1
 fi
 
-# --- SLURM Configuration ---
+# --- Assign Arguments to Variables ---
 ARCH=$1
 CLIENTS=$2
 EPOCHS=$3
 ACTIVATION=$4
 TRIALS=$5
 
-#SBATCH --job-name=FL_${ARCH}_${ACTIVATION} # Dynamic job name
-#SBATCH --partition=gpu
-#SBATCH --gres=gpu:l40:1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
-#SBATCH --time=48:00:00
-#SBATCH --output=slurm_logs/slurm-${ARCH}-${ACTIVATION}-%A_%a.out # Dynamic log file name
-#SBATCH --array=1-4
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=liamlaidlaw@boisestate.edu
-
 # --- JOB SETUP ---
 echo "======================================================"
-echo "Starting job $SLURM_JOB_ID for architecture ${ARCH}"
-echo "Host: $HOSTNAME"
-echo "Partition: ${SLURM_JOB_PARTITION}"
-echo "CPUs: ${SLURM_CPUS_ON_NODE}"
-echo "Memory: ${SLURM_MEM_PER_NODE} MB"
-echo "GPUs: $CUDA_VISIBLE_DEVICES"
+echo "SLURM Job ID: $SLURM_JOB_ID"
+echo "SLURM Array Task ID: $SLURM_ARRAY_TASK_ID"
+echo "Running on host: $HOSTNAME"
+echo "---"
+echo "EXPERIMENT PARAMETERS:"
+echo "Architecture: ${ARCH}"
 echo "Clients: ${CLIENTS}"
 echo "Epochs: ${EPOCHS}"
 echo "Activation: ${ACTIVATION}"
@@ -80,7 +83,7 @@ if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
 
   echo "Running ComplexResNet: Arch=${ARCH}, Activation=${ACTIVATION}, Aggregation=${AGG}"
 
-  python ../main.py \
+  python main.py \
     --model ComplexResNet \
     --architecture_type $ARCH \
     --complex_activations $ACTIVATION \
@@ -97,7 +100,7 @@ else
 
   echo "Running RealResNet: Arch=${ARCH}, Aggregation=${AGG}"
 
-  python ../main.py \
+  python main.py \
     --model RealResNet \
     --architecture_type $ARCH \
     --aggregation_strategy $AGG \
