@@ -2,6 +2,8 @@
 # This script launches the SLURM job arrays for all architectures.
 set -e
 
+./cleanup.sh
+
 # --- Experiment Parameters ---
 CLIENTS=2
 EPOCHS=1
