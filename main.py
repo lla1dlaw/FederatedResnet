@@ -27,7 +27,7 @@ def parse_arguments():
     # --- Training Control ---
     parser.add_argument('--epochs', default=200, type=int, metavar='N',
                         help='Number of total global epochs to run.')
-    parser.add_argument('--num_clients', '-n', type=int, default=10,
+    parser.add_argument('--numclients', '-n', type=int, default=10,
                         help='Number of clients for federated learning.')
     parser.add_argument('--num_trials', type=int, default=1, metavar='N',
                         help='Number of times to repeat the experiment for stability.')
