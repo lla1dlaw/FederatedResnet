@@ -86,9 +86,9 @@ if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
 
   python main.py \
     --model ComplexResNet \
-    --architecture_type $ARCH \
+    --arch $ARCH \
     --complex_activations $ACTIVATION \
-    --aggregation_strategy $AGG \
+    --agg $AGG \
     --learn_imaginary \
     --numclients $CLIENTS \
     --epochs $EPOCHS \
@@ -103,8 +103,8 @@ else
 
   python main.py \
     --model RealResNet \
-    --architecture_type $ARCH \
-    --aggregation_strategy $AGG \
+    --arch $ARCH \
+    --agg $AGG \
     --numclients $CLIENTS \
     --epochs $EPOCHS \
     --num_trials $TRIALS \
