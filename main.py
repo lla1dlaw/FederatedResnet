@@ -131,7 +131,7 @@ if __name__ == '__main__':
     # change these parameters to change training behavior
     __args = []
     args.epochs = 1
-    num_clients = 2
+    args.numclients = 2
     architecture_types = ['WS']
     complex_activations = ['crelu', 'complex_cardioid']
     aggregation_strategies = ['arithmetic', 'circular', 'hybrid']
@@ -143,7 +143,6 @@ if __name__ == '__main__':
         args.complex_activations = act
         args.aggregation_strategy = agg
         args.tqdm_mode = 'local'
-        args.num_clients = num_clients
         args.save = f"ComplexResNet-{arch}-{act}-{args.numclients}_clients-{agg}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
         __args.append(args)
 
@@ -151,7 +150,6 @@ if __name__ == '__main__':
         args.model = 'RealResNet'
         args.arch = arch
         args.aggregation_strategy = 'arithmetic' # only this one works for real valued resnets
-        args.num_clients = num_clients
         args.save = f'RealResNet-{arch}-{args.numclients}_clients-{agg}'
         args.tqdm_mode = 'local'
         __args.append(copy.copy(args))  
