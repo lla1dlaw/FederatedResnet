@@ -27,7 +27,10 @@ def parse_arguments():
                         help='optimizer function used')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')
-    # --- Training Control ---
+    parser.add_argument('--alpha', type=float, default=0.2,
+                        help='client parameters updating algorithm')# --- Training Control ---
+    parser.add_argument('--workmode', type=str, default='fullfull',
+                    help='system working mode')
     parser.add_argument('--epochs', default=200, type=int, metavar='N',
                         help='Number of total global epochs to run.')
     parser.add_argument('--numclients', '-n', type=int, default=10,

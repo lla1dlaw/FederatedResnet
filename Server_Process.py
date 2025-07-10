@@ -215,7 +215,7 @@ class Server():
             traintop5.update(top5)
         
         # aggregate client parameters
-        global_dict = self.aggregate_clients(self.args.aggregation_strategy)
+        global_dict = self.aggregate_clients(self.args.agg)
         self.model.load_state_dict(global_dict)
         
         # distribute the updated model to all clients
