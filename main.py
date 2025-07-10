@@ -40,7 +40,7 @@ def parse_arguments():
     parser.add_argument('--learn_imaginary', '-learn_imag',  action='store_true', help='Enable learning the imaginary component of real-valued input. If disabled, imaginary component is set to 0.')
     parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arethmetic', choices=['arethmetic', 'circular', 'hybrid'],
                     help='server parameters updating algorithm')
-    parser.add_argument('--num_saves', type=int, defualt=4, help="How many times the model will be saved throughout training. Ex. If epochs=100 and num_saves=5, the global model will be saved every 20 epochs.")
+    parser.add_argument('--num_saves', type=int, default=4, help="How many times the model will be saved throughout training. Ex. If epochs=100 and num_saves=5, the global model will be saved every 20 epochs.")
     parser.add_argument('--saved_models_dir', type=str, default='checkpoints', 
                         help="The directory to save models to during training. This directory will store folders for trained model, and will contain all checkpoints and the final model for each model. This directory will be contained within the results directory")
 
