@@ -28,7 +28,7 @@ class Server():
 
         if args.numclients == 1:
             train_data=[torch.utils.data.ConcatDataset(train_data)]
-        val_data = torch.utils.data.ConcatDataset(get_dataset(args.dataset, 'val',  distribution=None, numclients=1, dataset_path=args.datano))
+        val_data = torch.utils.data.ConcatDataset(get_dataset(args.dataset, 'val',  distribution=None, numclients=1))
         self.numclients = args.numclients
 
         model_config = []
