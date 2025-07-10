@@ -59,6 +59,7 @@ echo "======================================================"
 module purge
 module load conda
 module load cudnn8.5-cuda11.7/8.5.0.96
+module load gcc/10.2.0
 echo "Modules loaded."
 
 # 2. Activate your Conda environment
