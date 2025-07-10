@@ -9,5 +9,6 @@ pretty-errors==1.2.25
 python-dotenv==1.1.1
 scipy==1.16.0
 tomli==2.0.1
+torchmetrics==1.7.4
 torchvision==0.22.1
 tqdm==4.67.1
