@@ -140,7 +140,7 @@ class Server():
         if strategy == 'arithmetic':
             for k in global_dict.keys():
                 client_tensors = [self.clients[i].model.state_dict()[k] for i in range(self.numclients)]
-                global_dict[k] = self.arethemtic_mean(client_tensors)
+                global_dict[k] = self.arithmetic_mean(client_tensors)
         
         elif strategy == 'circular':
             print("Averaging strategy: Circular Mean")
