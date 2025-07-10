@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
     for arch, act, agg in product(architecture_types, complex_activations, aggregation_strategies):
         args.model = 'ComplexResNet'
-        args.architecture_type = arch
+        args.arch = arch
         args.learn_imag = True
         args.complex_activations = act
         args.aggregation_strategy = agg
