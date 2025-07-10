@@ -24,7 +24,7 @@ class Server():
 
         self.device = args.device
         
-        train_data = get_dataset(args.dataset, 'train', distribution= None, numclients=args.numclients, dataset_path=args.datano)
+        train_data = get_dataset(args.dataset, 'train', distribution= None, numclients=args.numclients)
 
         if args.numclients == 1:
             train_data=[torch.utils.data.ConcatDataset(train_data)]
