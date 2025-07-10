@@ -80,7 +80,7 @@ if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
 
   echo "Running ComplexResNet: Arch=${ARCH}, Activation=${ACTIVATION}, Aggregation=${AGG}"
 
-  python main.py \
+  python ../main.py \
     --model ComplexResNet \
     --architecture_type $ARCH \
     --complex_activations $ACTIVATION \
@@ -97,7 +97,7 @@ else
 
   echo "Running RealResNet: Arch=${ARCH}, Aggregation=${AGG}"
 
-  python main.py \
+  python ../main.py \
     --model RealResNet \
     --architecture_type $ARCH \
     --aggregation_strategy $AGG \
