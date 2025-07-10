@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=Federated-ResNet-Job
 #SBATCH --partition=gpu-l40
-#SBATCH --gres=gpu:l40:1
+#SBATCH --gres=gpu:1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
