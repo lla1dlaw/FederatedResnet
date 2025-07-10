@@ -37,13 +37,6 @@ class Client():
         num_parameters = sum([l.nelement() for l in self.model.parameters()])
         logging.info("number of parameters: %d", num_parameters)
 
-        # Data loading code
-        default_transform = {
-            'train': get_transform(self.args.dataset,
-                                input_size=self.args.input_size, augment=True),
-            'eval': get_transform(self.args.dataset,
-                                input_size=self.args.input_size, augment=False)
-        }
         regime = getattr(self.model, 'regime', {0: {'optimizer': self.args.optimizer,
                                            'lr': self.args.lr,
                                            'momentum': self.args.momentum,
