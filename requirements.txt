@@ -1,4 +1,6 @@
 complexpytorch
+torchmetrics
+torchvision
 importlib-metadata
 jaraco.collections
 matplotlib
@@ -8,6 +10,4 @@ pretty-errors
 python-dotenv
 scipy
 tomli
-torchmetrics
-torchvision
 tqdm
