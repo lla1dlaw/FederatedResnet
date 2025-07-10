@@ -23,7 +23,8 @@ def parse_arguments():
                         help='Enable learning the imaginary component for ComplexResNet.')
     parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arithmetic', choices=['arithmetic', 'circular', 'hybrid'],
                         help='Server parameter aggregation strategy.')
-
+    parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
+                        help='optimizer function used')
     # --- Training Control ---
     parser.add_argument('--epochs', default=200, type=int, metavar='N',
                         help='Number of total global epochs to run.')
