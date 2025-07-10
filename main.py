@@ -135,7 +135,7 @@ if __name__ == '__main__':
     args.save = f'RealResNet-{args.arch}'
     args.numclients = 10
     args.model = 'RealResNet'
-    args.agg = 'arethmetic'
+    args.agg = 'arithmetic'
     args.tqdm_mode = 'local'
     __args.append(copy.copy(args))  
 
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     args.save = f"ComplexResNet-{args.arch}-{args.act}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
     args.numclients = 10
     args.model = 'ComplexResNet'
-    args.agg = 'arethmetic'
+    args.agg = 'arithmetic'
     args.tqdm_mode = 'local'
     __args.append(copy.copy(args))  
 

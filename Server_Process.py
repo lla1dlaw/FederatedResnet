@@ -118,8 +118,8 @@ class Server():
         return mean_magnitude * avg_direction_unit_vec
 
 
-    def arethmetic_mean(self, tensors: list[torch.Tensor]) -> torch.Tensor:
-        "Computs the arethmetic (element-wise) mean."
+    def arithmetic_mean(self, tensors: list[torch.Tensor]) -> torch.Tensor:
+        "Computs the arithmetic (element-wise) mean."
         return torch.stack(tensors, 0).mean(0)
 
 
