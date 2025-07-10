@@ -40,6 +40,9 @@ def parse_arguments():
     parser.add_argument('--learn_imaginary', '-learn_imag',  action='store_true', help='Enable learning the imaginary component of real-valued input. If disabled, imaginary component is set to 0.')
     parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arethmetic', choices=['arethmetic', 'circular', 'hybrid'],
                     help='server parameters updating algorithm')
+    parser.add_argument('--num_saves', type=int, defualt=4, help="How many times the model will be saved throughout training. Ex. If epochs=100 and num_saves=5, the global model will be saved every 20 epochs.")
+    parser.add_argument('--saved_models_dir', type=str, default='checkpoints', 
+                        help="The directory to save models to during training. This directory will store folders for trained model, and will contain all checkpoints and the final model for each model. This directory will be contained within the results directory")
 
     parser.add_argument('--input_size', type=int, default=28, help='image input size')
     parser.add_argument('--model_config', default='', help='additional architecture configuration')
@@ -54,7 +57,7 @@ def parse_arguments():
                     help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-    parser.add_argument('-b', '--batch-size', default=128, type=int,
+    parser.add_argument('-b', '--batch_size', default=128, type=int,
                     metavar='N', help='mini-batch size (default: 64)')
     parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
                     help='optimizer function used')
@@ -130,8 +133,10 @@ if __name__ == '__main__':
 
     # change these parameters to change training behavior
     __args = []
-    args.epochs = 1
+    args.epochs = 2
     args.numclients = 2
+    if args.num_saves > 0: # avoid deviding by 0
+        args.save_frequency = max(1, args.epochs // args.num_saves) # 
     architecture_types = ['WS']
     complex_activations = ['crelu', 'complex_cardioid']
     aggregation_strategies = ['arithmetic', 'circular', 'hybrid']
@@ -179,4 +184,7 @@ if __name__ == '__main__':
 
             for epoch in epochs:
                 server_.train_epoch(epoch)
+                if args.num_saves > 0 and (epoch + 1) % args.save_frequency == 0:
+                    server_.save_model(epoch, path=os.path.join(arg.results_dir, arg.save, arg.saved_models_dir))
+                    print(f"✅ Saving model at epoch {epoch + 1}")
 

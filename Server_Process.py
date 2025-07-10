@@ -56,7 +56,7 @@ class Server():
         self.val_loader = torch.utils.data.DataLoader(
             val_data,
             batch_size=1024, shuffle=False,
-            num_workers=1, pin_memory=torch.cuda.is_available())
+            num_workers=2, pin_memory=torch.cuda.is_available())
 
 
     def val(self, val_loader):
@@ -98,6 +98,27 @@ class Server():
         # torch.save(self.model, 'model.pth')
         self.args.alpha = 1
         self.args.workmode = 'fullfull'
+
+
+    def save_model(self, epoch, path, dict_only=False) -> None:
+        """Saves the current model
+
+        Saves the current model to the given path.
+
+        Args:
+            epoch (int): The last epoch that the model was trained. 
+            path (str): Path to the save directory for the model. If the directory does not exist, it is created. 
+            dict_only (bool): Whether to save the full model or only it's state dictionary. Defaults to False. 
+        """
+
+        save_device = torch.device('cpu')
+        model = copy.deepcopy(self.model).to(save_device)
+        save_contents = model.state_dict() if dict_only else model
+        save_filename = f"{self.args.save}-epoch_{epoch}.pth"
+        save_path = os.path.join(path, save_filename)
+        # make the save directory if it doesn't exist already. 
+        os.makedirs(path, exist_ok=True)
+        torch.save(save_contents, save_path)
 
 
     def circular_mean(self, tensors: list[torch.Tensor]) -> torch.Tensor:
