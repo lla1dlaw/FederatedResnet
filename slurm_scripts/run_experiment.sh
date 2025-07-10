@@ -62,7 +62,7 @@ module load cudnn8.5-cuda11.7/8.5.0.96
 echo "Modules loaded."
 
 # 2. Activate your Conda environment
-source activate FederatedResnet
+conda activate FederatedResnet
 echo "Activated Conda environment: $CONDA_DEFAULT_ENV"
 
 # 3. Diagnostic checks
