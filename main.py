@@ -133,22 +133,22 @@ if __name__ == '__main__':
     args.epochs = 1
     args.num_clients = 2
     architecture_types = ['WS']
-    complex_activations = ['crelu']
+    complex_activations = ['crelu', 'complex_cardioid']
     aggregation_strategies = ['arithmetic', 'circular', 'hybrid']
 
     for arch, act, agg in product(architecture_types, complex_activations, aggregation_strategies):
         args.model = 'ComplexResNet'
         args.architecture_type = arch
+        args.learn_imag = True
         args.complex_activations = act
         args.aggregation_strategy = agg
         args.tqdm_mode = 'local'
-        args.save = f"ComplexResNet-{args.arch}-{args.act}-{args.numclients}_clients-{args.aggregation_strategy}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
+        args.save = f"ComplexResNet-{arch}-{act}-{args.numclients}_clients-{agg}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
         __args.append(args)
 
-    for arch in product(architecture_types):
+    for arch in architecture_types:
         args.model = 'RealResNet'
         args.arch = arch
-        args.learn_imag = True
         args.aggregation_strategy = 'arithmetic' # only this one works for real valued resnets
         args.save = f'RealResNet-{arch}-{args.numclients}_clients-{agg}'
         args.tqdm_mode = 'local'
