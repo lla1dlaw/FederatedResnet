@@ -145,8 +145,8 @@ if __name__ == '__main__':
         args.model = 'ComplexResNet'
         args.arch = arch
         args.learn_imag = True
-        args.complex_activations = act
-        args.aggregation_strategy = agg
+        args.act = act
+        args.agg = agg
         args.tqdm_mode = 'local'
         args.save = f"ComplexResNet-{arch}-{act}-{args.numclients}_clients-{agg}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
         __args.append(copy.copy(args))
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     for arch in architecture_types:
         args.model = 'RealResNet'
         args.arch = arch
-        args.aggregation_strategy = 'arithmetic' # only this one works for real valued resnets
+        args.agg = 'arithmetic' # only this one works for real valued resnets
         args.save = f'RealResNet-{arch}-{args.numclients}_clients-arithmetic'
         args.tqdm_mode = 'local'
         __args.append(copy.copy(args))  
