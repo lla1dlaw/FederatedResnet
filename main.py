@@ -150,7 +150,7 @@ if __name__ == '__main__':
         args.model = 'RealResNet'
         args.arch = arch
         args.aggregation_strategy = 'arithmetic' # only this one works for real valued resnets
-        args.save = f'RealResNet-{arch}-{args.numclients}_clients-{agg}'
+        args.save = f'RealResNet-{arch}-{args.numclients}_clients-arithmetic'
         args.tqdm_mode = 'local'
         __args.append(copy.copy(args))  
 
@@ -160,22 +160,22 @@ if __name__ == '__main__':
 
     print(f"\nNumber of Models to Train: {len(__args)}")
 
-    for args in  __args:
-        prompt = f"{'='} Begining Training for model: {args.save}"
+    for arg in  __args:
+        prompt = f"{'='} Begining Training for model: {arg.save}"
 
-        print(f"\n\nBegining Training for model: {args.save}")
+        print(f"\n\nBegining Training for model: {arg.save}")
         print(f"{'='*len(prompt)}\n")
 
         for trial in range (1, num_trials+1):
             print(f'Starting Trial #{trial}')
-            args.trial = f"results_tr{trial}"
-            save_path = os.path.join(args.results_dir, args.save)
+            arg.trial = f"results_tr{trial}"
+            save_path = os.path.join(arg.results_dir, arg.save)
 
             if not os.path.exists(save_path):
                 os.makedirs(save_path)
-            server_ = Server(args)
+            server_ = Server(arg)
 
-            epochs = tqdm(range(args.start_epoch, args.epochs), desc=args.save, dynamic_ncols=True) if args.tqdm_mode == 'global' else range(args.start_epoch, args.epochs) 
+            epochs = tqdm(range(arg.start_epoch, arg.epochs), desc=arg.save, dynamic_ncols=True) if arg.tqdm_mode == 'global' else range(arg.start_epoch, arg.epochs) 
 
             for epoch in epochs:
                 server_.train_epoch(epoch)
