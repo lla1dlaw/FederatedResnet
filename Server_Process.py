@@ -89,8 +89,10 @@ class Server():
             for name, metric in metrics.items():
                 metric.update(probs, target) if name == 'auroc' else metric.update(output, target)
 
-        metrics['val_loss'] = losses.avg
-        return metrics
+            final_metrics = {key: metric.compute().item() for key, metric in metrics.items()}
+
+        final_metrics['val_loss'] = losses.avg
+        return final_metrics
 
     def copy_to_full(self):
         # torch.save(self.model, 'model.pth')

@@ -132,10 +132,10 @@ if __name__ == '__main__':
     
     # You can add more configuration/settings here, so that you get several results!
     args.arch = 'WS'
-    args.save = f'RealResNet-{args.arch}'
-    args.numclients = 10
+    args.numclients = 2
     args.model = 'RealResNet'
     args.aggregation_strategy = 'arithmetic'
+    args.save = f'RealResNet-{args.arch}-{args.numclients}_clients-{args.aggregation_strategy}'
     args.tqdm_mode = 'local'
     __args.append(copy.copy(args))  
 
@@ -143,10 +143,10 @@ if __name__ == '__main__':
     args.arch = 'WS'
     args.act = 'crelu'
     args.learn_imag = True
-    args.save = f"ComplexResNet-{args.arch}-{args.act}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
-    args.numclients = 10
+    args.numclients = 2
     args.model = 'ComplexResNet'
     args.aggregation_strategy = 'arithmetic'
+    args.save = f"ComplexResNet-{args.arch}-{args.act}-{args.numclients}_clients-{args.aggregation_strategy}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
     args.tqdm_mode = 'local'
     __args.append(copy.copy(args))  
 
