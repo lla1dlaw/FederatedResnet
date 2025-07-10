@@ -36,8 +36,7 @@ class Client():
 
         regime = getattr(self.model, 'regime', {0: {'optimizer': self.args.optimizer,
                                            'lr': self.args.lr,
-                                           'momentum': self.args.momentum,
-                                           'weight_decay': self.args.weight_decay}})
+                                           'momentum': self.args.momentum}})
         # define loss function (criterion) and optimizer
         self.criterion = getattr(self.model, 'criterion', nn.CrossEntropyLoss)()
         self.criterion.type(self.args.type)
