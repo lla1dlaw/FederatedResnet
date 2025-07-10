@@ -209,7 +209,7 @@ class Server():
         
         # print results
         print(f"\nEpoch {epoch+1} Results:")
-        for key, value in training_metrics:
+        for key, value in training_metrics.items():
             if key != 'epoch':
                 print(f"{key}: {value}")
         print()
