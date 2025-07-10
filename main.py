@@ -75,9 +75,9 @@ def main():
     if not args.save:
         if args.model == 'ComplexResNet':
             imag_str = 'learn_imag' if args.learn_imaginary else 'zero_imag'
-            args.save = f"{args.model}-{args.architecture_type}-{args.complex_activations}-{args.num_clients}_clients-{args.aggregation_strategy}-{imag_str}"
+            args.save = f"{args.model}-{args.architecture_type}-{args.complex_activations}-{args.numclients}_clients-{args.aggregation_strategy}-{imag_str}"
         else: # RealResNet
-            args.save = f"{args.model}-{args.architecture_type}-{args.num_clients}_clients-{args.aggregation_strategy}"
+            args.save = f"{args.model}-{args.architecture_type}-{args.numclients}_clients-{args.aggregation_strategy}"
 
     if args.num_saves > 0 and args.epochs > 0:
         args.save_frequency = max(1, args.epochs // args.num_saves)
