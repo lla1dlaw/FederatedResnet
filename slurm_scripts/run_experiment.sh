@@ -90,7 +90,7 @@ if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
     --complex_activations $ACTIVATION \
     --aggregation_strategy $AGG \
     --learn_imaginary \
-    --num_clients $CLIENTS \
+    --numclients $CLIENTS \
     --epochs $EPOCHS \
     --num_trials $TRIALS \
     --tqdm_mode local
@@ -105,7 +105,7 @@ else
     --model RealResNet \
     --architecture_type $ARCH \
     --aggregation_strategy $AGG \
-    --num_clients $CLIENTS \
+    --numclients $CLIENTS \
     --epochs $EPOCHS \
     --num_trials $TRIALS \
     --tqdm_mode local
