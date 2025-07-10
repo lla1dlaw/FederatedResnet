@@ -10,6 +10,7 @@ from utils import *
 import copy
 from Client_Process import Client
 from models import ComplexResNet, RealResNet
+from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall, MulticlassF1Score, MulticlassAUROC
 
 class Server():
     def __init__(self, args):
@@ -60,9 +61,19 @@ class Server():
 
     def val(self, val_loader):
         self.model.eval()
+        num_classes = 10
+        metrics = {
+                "accuracy": MulticlassAccuracy(num_classes=num_classes, average='micro').to(self.device),
+                "top_5_accuracy": MulticlassAccuracy(num_classes=num_classes, top_k=5).to(self.device),
+                "precision_macro": MulticlassPrecision(num_classes=num_classes, average='macro').to(self.device),
+                "recall_macro": MulticlassRecall(num_classes=num_classes, average='macro').to(self.device),
+                "f1_score_micro": MulticlassF1Score(num_classes=num_classes, average='micro').to(self.device),
+                "f1_score_macro": MulticlassF1Score(num_classes=num_classes, average='macro').to(self.device),
+                "f1_score_weighted": MulticlassF1Score(num_classes=num_classes, average='weighted').to(self.device),
+                "auroc": MulticlassAUROC(num_classes=num_classes, average="macro").to(self.device)
+            }
         losses = AverageMeter()
-        top1 = AverageMeter()
-        top5 = AverageMeter()
+
         for _, (inputs, target) in enumerate(val_loader):
             target = target.to(self.device) 
 
@@ -70,18 +81,16 @@ class Server():
                 input = inputs.to(self.device).type(self.args.type)
                 # compute output
                 output = self.model(input)
+                probs = torch.softmax(output, dim=1)
 
             loss = self.criterion(output, target.to(dtype=torch.int64))
-            if type(output) is list:
-                output = output[0]
-
-            # measure accuracy and record loss
-            prec1, prec5 = accuracy(output.data, target, topk=(1, 2))
             losses.update(loss.item(), inputs.size(0))
-            top1.update(prec1.item(), inputs.size(0))
-            top5.update(prec5.item(), inputs.size(0))
 
-        return losses.avg, top1.avg, top5.avg
+            for name, metric in metrics.items():
+                metric.update(probs, target) if name == 'auroc' else metric.update(output, target)
+
+        metrics['val_loss'] = losses.avg
+        return metrics
 
     def copy_to_full(self):
         # torch.save(self.model, 'model.pth')
@@ -167,9 +176,6 @@ class Server():
         trainloss = AverageMeter()
         traintop1 = AverageMeter()
         traintop5 = AverageMeter()
-        valloss = AverageMeter()
-        valtop1 = AverageMeter()
-        valtop5 = AverageMeter()
 
         print(f"-- Training Epoch {epoch} --")
         clients_iterator = tqdm(range(self.numclients), desc='Training Clients', dynamic_ncols=True) if self.args.tqdm_mode == 'local' else range(self.numclients)
@@ -193,9 +199,12 @@ class Server():
             client.localupdate(self.model.state_dict(), sigma=sigma, mode=mode)
         
         # calculate and save metrics
-        valloss, valtop1, valtop5 = self.val(self.val_loader)
-        self.results.add(epoch=epoch + 1, train_loss=trainloss.avg, val_loss=valloss,
-                    train_error1=100 - traintop1.avg, val_error1=100 - valtop1,
-                    train_error5=100 - traintop5.avg, val_error5=100 - valtop5)
+        training_metrics = self.val(self.val_loader)
+        training_metrics['epoch'] = epoch+1 
+        training_metrics['train_loss'] = trainloss.avg
+        training_metrics['train_acc_1'] = traintop1.avg
+        training_metrics['train_acc_5'] = traintop5.avg
+
+        self.results.add(**training_metrics)
         self.results.save()
 
