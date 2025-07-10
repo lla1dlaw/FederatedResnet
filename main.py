@@ -144,7 +144,7 @@ if __name__ == '__main__':
         args.aggregation_strategy = agg
         args.tqdm_mode = 'local'
         args.save = f"ComplexResNet-{arch}-{act}-{args.numclients}_clients-{agg}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
-        __args.append(args)
+        __args.append(copy.copy(args))
 
     for arch in architecture_types:
         args.model = 'RealResNet'
