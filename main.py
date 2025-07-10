@@ -158,6 +158,8 @@ if __name__ == '__main__':
 
     num_trials = 1 # Repeat simulation for <T> runs (to have more stable/reliable results)
 
+    print(f"\nNumber of Models to Train: {len(__args)}")
+
     for args in  __args:
         prompt = f"{'='} Begining Training for model: {args.save}"
 
