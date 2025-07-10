@@ -38,7 +38,7 @@ def parse_arguments():
     parser.add_argument('--architecture_type', '-arch', metavar='ARCH', type=str, nargs='+', default=['WS'], choices=['WS', 'DN', 'IB'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
     parser.add_argument('--complex_activations', '-act', metavar='ACT', type=str, nargs='+', default=['crelu'], choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
     parser.add_argument('--learn_imaginary', '-learn_imag',  action='store_true', help='Enable learning the imaginary component of real-valued input. If disabled, imaginary component is set to 0.')
-    parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arethmetic', choices=['arethmetic', 'circular', 'hybrid'],
+    parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arithmetic', choices=['arithmetic', 'circular', 'hybrid'],
                     help='server parameters updating algorithm')
     parser.add_argument('--num_saves', type=int, default=4, help="How many times the model will be saved throughout training. Ex. If epochs=100 and num_saves=5, the global model will be saved every 20 epochs.")
     parser.add_argument('--saved_models_dir', type=str, default='checkpoints', 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     
     #configure_device(args)
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f'device is {args.device}')
+    print(f'-- Device {args.device} --')
     if args.evaluate: 
         args.results_dir = '/tmp'
     if args.save == '': # So what?!
