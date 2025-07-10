@@ -17,6 +17,7 @@ import models
 importlib.reload(models)
 from datetime import datetime
 from tqdm import tqdm
+from itertools import product
 
 now = datetime.now()
 # Print the current date and time with a specific format
@@ -31,12 +32,15 @@ def parse_arguments():
     parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./results', help='results dir')
     parser.add_argument('--save', metavar='SAVE', default='', help='saved folder')
     parser.add_argument('--dataset', metavar='DATASET', default='cifar10', help='dataset name or folder')
+
     parser.add_argument('--model', '-a', metavar='MODEL', default='RealResNet', choices=model_names,
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: alexnet)')
     parser.add_argument('--architecture_type', '-arch', metavar='ARCH', type=str, nargs='+', default=['WS'], choices=['WS', 'DN', 'IB'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
-    parser.add_argument('--complex_activation', '-act', metavar='ACT', type=str, nargs='+', default=['crelu'], choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
+    parser.add_argument('--complex_activations', '-act', metavar='ACT', type=str, nargs='+', default=['crelu'], choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
     parser.add_argument('--learn_imaginary', '-learn_imag',  action='store_true', help='Enable learning the imaginary component of real-valued input. If disabled, imaginary component is set to 0.')
-    
+    parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arethmetic', choices=['arethmetic', 'circular', 'hybrid'],
+                    help='server parameters updating algorithm')
+
     parser.add_argument('--input_size', type=int, default=28, help='image input size')
     parser.add_argument('--model_config', default='', help='additional architecture configuration')
     parser.add_argument('--type', default='torch.cuda.FloatTensor' if torch.cuda.is_available() else torch.Tensor, help='type of tensor - e.g torch.cuda.HalfTensor')
@@ -68,8 +72,7 @@ def parse_arguments():
                     help='evaluate model FILE on validation set')
     parser.add_argument('-n', '--numclients', type=int, default=4,
                     help='number of clients')
-    parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arethmetic', choices=['arethmetic', 'circular', 'hybrid'],
-                    help='server parameters updating algorithm')
+
     parser.add_argument('--workmode', type=str, default='fullfull',
                     help='system working mode')
     parser.add_argument('--alpha', type=float, default=0.2,
@@ -125,32 +128,34 @@ if __name__ == '__main__':
         args.save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     args.datano = '0' # Adding extra item the the list of arguments.
 
-    args.epochs = 2
-
-    n = args.numclients
+    # change these parameters to change training behavior
     __args = []
-    
-    # You can add more configuration/settings here, so that you get several results!
-    args.arch = 'WS'
-    args.numclients = 2
-    args.model = 'RealResNet'
-    args.aggregation_strategy = 'arithmetic'
-    args.save = f'RealResNet-{args.arch}-{args.numclients}_clients-{args.aggregation_strategy}'
-    args.tqdm_mode = 'local'
-    __args.append(copy.copy(args))  
+    args.epochs = 1
+    args.num_clients = 2
+    architecture_types = ['WS']
+    complex_activations = ['crelu']
+    aggregation_strategies = ['arithmetic', 'circular', 'hybrid']
 
-    # You can add more configuration/settings here, so that you get several results!
-    args.arch = 'WS'
-    args.act = 'crelu'
-    args.learn_imag = True
-    args.numclients = 2
-    args.model = 'ComplexResNet'
-    args.aggregation_strategy = 'arithmetic'
-    args.save = f"ComplexResNet-{args.arch}-{args.act}-{args.numclients}_clients-{args.aggregation_strategy}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
-    args.tqdm_mode = 'local'
-    __args.append(copy.copy(args))  
+    for arch, act, agg in product(architecture_types, complex_activations, aggregation_strategies):
+        args.model = 'ComplexResNet'
+        args.architecture_type = arch
+        args.complex_activations = act
+        args.aggregation_strategy = agg
+        args.tqdm_mode = 'local'
+        args.save = f"ComplexResNet-{args.arch}-{args.act}-{args.numclients}_clients-{args.aggregation_strategy}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
+        __args.append(args)
 
-    
+    for arch in product(architecture_types):
+        args.model = 'RealResNet'
+        args.arch = arch
+        args.learn_imag = True
+        args.aggregation_strategy = 'arithmetic' # only this one works for real valued resnets
+        args.save = f'RealResNet-{arch}-{args.numclients}_clients-{agg}'
+        args.tqdm_mode = 'local'
+        __args.append(copy.copy(args))  
+
+    # You can add more configuration/settings here, so that you get several results
+
     num_trials = 1 # Repeat simulation for <T> runs (to have more stable/reliable results)
 
     for args in  __args:
