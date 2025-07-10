@@ -3,10 +3,10 @@
 set -e
 
 # --- Experiment Parameters ---
-CLIENTS=10
-EPOCHS=200
+CLIENTS=2
+EPOCHS=1
 ACTIVATION="crelu"
-TRIALS=10 # Set the number of trials for all experiments
+TRIALS=1 # Set the number of trials for all experiments
 
 echo "Submitting jobs for WS, DN, and IB architectures..."
 echo "Clients per job: ${CLIENTS}"

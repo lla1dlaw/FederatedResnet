@@ -1,178 +1,115 @@
-#Simulation for the paper: https://arxiv.org/abs/2405.13365
-#The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
-
 import pretty_errors
 import argparse
 import os
 import torch
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.utils.data
 from utils import *
 from datetime import datetime
 from Server_Process import Server
 import copy
-import importlib
-import models
-importlib.reload(models)
-from datetime import datetime
 from tqdm import tqdm
-from itertools import product
-
-now = datetime.now()
-# Print the current date and time with a specific format
-formatted_date_time = now.strftime("%Y-%m-%d %H:%M:%S")
-print("-- Script Started at:", formatted_date_time, "--")
-
-model_names = ['RealResNet', 'ComplexResNet']
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='PyTorch ResNet Training')
+    """Parses command-line arguments for the training script."""
+    parser = argparse.ArgumentParser(description='PyTorch Federated ResNet Training')
 
-    parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./results', help='results dir')
-    parser.add_argument('--save', metavar='SAVE', default='', help='saved folder')
-    parser.add_argument('--dataset', metavar='DATASET', default='cifar10', help='dataset name or folder')
-
-    parser.add_argument('--model', '-a', metavar='MODEL', default='RealResNet', choices=model_names,
-                    help='model architecture: ' + ' | '.join(model_names) + ' (default: alexnet)')
-    parser.add_argument('--architecture_type', '-arch', metavar='ARCH', type=str, nargs='+', default=['WS'], choices=['WS', 'DN', 'IB'], help="Pick any combination of the following separated by spaces: 'WS', 'DN', 'IB'.")
-    parser.add_argument('--complex_activations', '-act', metavar='ACT', type=str, nargs='+', default=['crelu'], choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'], help="Pick any combination of the following separated by spaces: 'crelu', 'zrelu', 'modrelu', 'complex_cardioid'.")
-    parser.add_argument('--learn_imaginary', '-learn_imag',  action='store_true', help='Enable learning the imaginary component of real-valued input. If disabled, imaginary component is set to 0.')
+    # --- Model Configuration ---
+    parser.add_argument('--model', '-a', metavar='MODEL', required=True, choices=['RealResNet', 'ComplexResNet'],
+                        help='Model architecture to train.')
+    parser.add_argument('--architecture_type', '-arch', metavar='ARCH', required=True, type=str, choices=['WS', 'DN', 'IB'],
+                        help="The architecture type (e.g., 'WS', 'DN', 'IB').")
+    parser.add_argument('--complex_activations', '-act', metavar='ACT', type=str, default='crelu', choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'],
+                        help="Activation function for ComplexResNet.")
+    parser.add_argument('--learn_imaginary', '-learn_imag', action='store_true',
+                        help='Enable learning the imaginary component for ComplexResNet.')
     parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arithmetic', choices=['arithmetic', 'circular', 'hybrid'],
-                    help='server parameters updating algorithm')
-    parser.add_argument('--num_saves', type=int, default=4, help="How many times the model will be saved throughout training. Ex. If epochs=100 and num_saves=5, the global model will be saved every 20 epochs.")
-    parser.add_argument('--saved_models_dir', type=str, default='checkpoints', 
-                        help="The directory to save models to during training. This directory will store folders for trained model, and will contain all checkpoints and the final model for each model. This directory will be contained within the results directory")
+                        help='Server parameter aggregation strategy.')
 
-    parser.add_argument('--input_size', type=int, default=28, help='image input size')
-    parser.add_argument('--type', default='torch.cuda.FloatTensor' if torch.cuda.is_available() else torch.Tensor, help='type of tensor - e.g torch.cuda.HalfTensor')
-# Setting the argument num_workers as a positive integer will turn on multi-process
-# data loading in torch.utils.data.DataLoader with the specified number of loader
-# worker processes:
-    parser.add_argument('--epochs', default=10, type=int, metavar='N',
-                    help='number of total epochs to run')
-    parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
-                    help='manual epoch number (useful on restarts)')
+    # --- Training Control ---
+    parser.add_argument('--epochs', default=200, type=int, metavar='N',
+                        help='Number of total global epochs to run.')
+    parser.add_argument('--num_clients', '-n', type=int, default=10,
+                        help='Number of clients for federated learning.')
+    parser.add_argument('--num_trials', type=int, default=1, metavar='N',
+                        help='Number of times to repeat the experiment for stability.')
     parser.add_argument('-b', '--batch_size', default=128, type=int,
-                    metavar='N', help='mini-batch size (default: 64)')
-    parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
-                    help='optimizer function used')
+                        metavar='N', help='Mini-batch size.')
     parser.add_argument('--lr', '--learning_rate', default=0.01, type=float,
-                    metavar='LR', help='initial learning rate')
-    parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
-                    help='momentum')
-    parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
-                    metavar='W', help='weight decay (default: 1e-4)')
-    parser.add_argument('-n', '--numclients', type=int, default=4,
-                    help='number of clients')
+                        metavar='LR', help='Initial learning rate.')
 
-    parser.add_argument('--workmode', type=str, default='fullfull',
-                    help='system working mode')
+    # --- Housekeeping ---
+    parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./results',
+                        help='Directory to save results.')
+    parser.add_argument('--save', metavar='SAVE', default='',
+                        help='Custom name for the saved model folder. If not set, a name is generated automatically.')
+    parser.add_argument('--dataset', metavar='DATASET', default='cifar10',
+                        help='Dataset name or folder.')
+    parser.add_argument('--num_saves', type=int, default=4,
+                        help="Number of times to save the model during training.")
+    parser.add_argument('--saved_models_dir', type=str, default='checkpoints',
+                        help="The directory to save model checkpoints.")
+    parser.add_argument('--tqdm_mode', '-tqdm', type=str, default='local', choices=['global', 'local'],
+                        help='Use tqdm progress bar during training.')
+    parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+                        help='Manual epoch number (useful on restarts).')
+    parser.add_argument('--type', default='torch.cuda.FloatTensor' if torch.cuda.is_available() else torch.Tensor,
+                        help='Type of tensor to use.')
 
-    parser.add_argument('--tqdm_mode', '-tqdm', type=str, choices=['global', 'local'], help='Use tqdm progress bar during training to show global training progress.')
-    
     args = parser.parse_args()
-    validate_arguments(args) #Validate argument values early on to catch potential errors before they propagate further into the system
+    validate_arguments(args)
     return args
 
 def validate_arguments(args):
+    """Validates the parsed arguments to prevent invalid configurations."""
     if args.batch_size < 1:
-        raise ValueError("Batch size must be a positive integer")
-
+        raise ValueError("Batch size must be a positive integer.")
     if args.model == 'RealResNet' and args.learn_imaginary:
-        raise ValueError("RealResNets cannot learn an imaginary component. Remove '--learn_imaginary' if you wish to use RealResNet")
-    
+        raise ValueError("RealResNets cannot learn an imaginary component. Remove '--learn_imaginary' flag.")
 
+def main():
+    """Main function to run the training process."""
+    args = parse_arguments()
+    args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"-- Device: {args.device} --")
 
-def configure_device(args):
-    if 'cuda' in args.type and torch.cuda.is_available():
-        try:
-            # Try to set GPU if specified and available
-            args.gpus = [int(i) for i in args.gpus.split(',') if i.isdigit()]
-            args.gpus = [i for i in args.gpus if i < torch.cuda.device_count()]
-            if args.gpus:
-                torch.cuda.set_device(args.gpus[0])  # Use the first available GPU
-                print(f"Using GPU: {torch.cuda.get_device_name(args.gpus[0])}")
-                cudnn.benchmark = True
-            else:
-                raise ValueError("No valid GPU found, switching to CPU.")
-        except ValueError as e:
-            print(e)
-            args.device = torch.device('cpu')
-            print("Switched to CPU.")
-    else:
-        # Default to CPU if CUDA is not mentioned or GPUs are unavailable
-        args.device = torch.device('cpu')
-        print("Using CPU.")
+    # --- Dynamic Save Name Generation ---
+    if not args.save:
+        if args.model == 'ComplexResNet':
+            imag_str = 'learn_imag' if args.learn_imaginary else 'zero_imag'
+            args.save = f"{args.model}-{args.architecture_type}-{args.complex_activations}-{args.num_clients}_clients-{args.aggregation_strategy}-{imag_str}"
+        else: # RealResNet
+            args.save = f"{args.model}-{args.architecture_type}-{args.num_clients}_clients-{args.aggregation_strategy}"
 
-    return args
+    if args.num_saves > 0 and args.epochs > 0:
+        args.save_frequency = max(1, args.epochs // args.num_saves)
+
+    # --- Training Loop ---
+    print(f"Starting Experiment: {args.save}")
+    print(f"Number of Trials: {args.num_trials}")
+
+    for trial in range(1, args.num_trials + 1):
+        trial_args = copy.deepcopy(args)
+        trial_args.trial = f"results_tr{trial}"
+        
+        prompt = f" Trial {trial} of {args.num_trials} "
+        print(f"\n{prompt:=^80}")
+        
+        save_path = os.path.join(trial_args.results_dir, trial_args.save)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+            
+        server = Server(trial_args)
+
+        epochs_iterator = tqdm(range(trial_args.start_epoch, trial_args.epochs), desc=trial_args.save, dynamic_ncols=True) if trial_args.tqdm_mode == 'global' else range(trial_args.start_epoch, trial_args.epochs)
+
+        for epoch in epochs_iterator:
+            server.train_epoch(epoch)
+            if hasattr(trial_args, 'save_frequency') and (epoch + 1) % trial_args.save_frequency == 0:
+                server.save_model(epoch, path=os.path.join(trial_args.results_dir, trial_args.save, trial_args.saved_models_dir))
+                print(f"✅ Saving model at epoch {epoch + 1}")
 
 if __name__ == '__main__':
-    args = parse_arguments()
-    
-    #configure_device(args)
-    args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f'-- Device {args.device} --')
-    if args.evaluate: 
-        args.results_dir = '/tmp'
-    if args.save == '': # So what?!
-        args.save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    args.datano = '0' # Adding extra item the the list of arguments.
-
-    # change these parameters to change training behavior
-    __args = []
-    args.epochs = 2
-    args.numclients = 2
-    if args.num_saves > 0: # avoid deviding by 0
-        args.save_frequency = max(1, args.epochs // args.num_saves) # 
-    architecture_types = ['WS']
-    complex_activations = ['crelu', 'complex_cardioid']
-    aggregation_strategies = ['arithmetic', 'circular', 'hybrid']
-
-    for arch, act, agg in product(architecture_types, complex_activations, aggregation_strategies):
-        args.model = 'ComplexResNet'
-        args.arch = arch
-        args.learn_imag = True
-        args.act = act
-        args.agg = agg
-        args.tqdm_mode = 'local'
-        args.save = f"ComplexResNet-{arch}-{act}-{args.numclients}_clients-{agg}-{'learn_imag' if args.learn_imag else 'zero_imag'}"
-        __args.append(copy.copy(args))
-
-    for arch in architecture_types:
-        args.model = 'RealResNet'
-        args.arch = arch
-        args.agg = 'arithmetic' # only this one works for real valued resnets
-        args.save = f'RealResNet-{arch}-{args.numclients}_clients-arithmetic'
-        args.tqdm_mode = 'local'
-        __args.append(copy.copy(args))  
-
-    # You can add more configuration/settings here, so that you get several results
-
-    num_trials = 1 # Repeat simulation for <T> runs (to have more stable/reliable results)
-
-    print(f"\nNumber of Models to Train: {len(__args)}")
-
-    for arg in  __args:
-        prompt = f"{'='} Begining Training for model: {arg.save}"
-
-        print(f"\n\nBegining Training for model: {arg.save}")
-        print(f"{'='*len(prompt)}\n")
-
-        for trial in range (1, num_trials+1):
-            print(f'Starting Trial #{trial}')
-            arg.trial = f"results_tr{trial}"
-            save_path = os.path.join(arg.results_dir, arg.save)
-
-            if not os.path.exists(save_path):
-                os.makedirs(save_path)
-            server_ = Server(arg)
-
-            epochs = tqdm(range(arg.start_epoch, arg.epochs), desc=arg.save, dynamic_ncols=True) if arg.tqdm_mode == 'global' else range(arg.start_epoch, arg.epochs) 
-
-            for epoch in epochs:
-                server_.train_epoch(epoch)
-                if args.num_saves > 0 and (epoch + 1) % args.save_frequency == 0:
-                    server_.save_model(epoch, path=os.path.join(arg.results_dir, arg.save, arg.saved_models_dir))
-                    print(f"✅ Saving model at epoch {epoch + 1}")
-
+    now = datetime.now()
+    print(f"-- Script Started at: {now.strftime('%Y-%m-%d %H:%M:%S')} --")
+    main()
+    now = datetime.now()
+    print(f"-- Script Finished at: {now.strftime('%Y-%m-%d %H:%M:%S')} --")
