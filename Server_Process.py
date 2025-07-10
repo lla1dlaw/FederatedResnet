@@ -177,7 +177,7 @@ class Server():
         traintop1 = AverageMeter()
         traintop5 = AverageMeter()
 
-        print(f"-- Training Epoch {epoch} --")
+        print(f"\n-- Training Epoch {epoch} --")
         clients_iterator = tqdm(range(self.numclients), desc='Training Clients', dynamic_ncols=True) if self.args.tqdm_mode == 'local' else range(self.numclients)
 
         # train clients over 1 epoch
@@ -204,6 +204,13 @@ class Server():
         training_metrics['train_loss'] = trainloss.avg
         training_metrics['train_acc_1'] = traintop1.avg
         training_metrics['train_acc_5'] = traintop5.avg
+        
+        # print results
+        print(f"\nEpoch {epoch+1} Results:")
+        for key, value in training_metrics:
+            if key != 'epoch':
+                print(f"{key}: {value}")
+        print()
 
         self.results.add(**training_metrics)
         self.results.save()
