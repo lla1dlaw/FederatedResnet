@@ -1,6 +1,7 @@
 #Simulation for the paper_of_clients: https://arxiv.org/abs/2405.13365
 #The base settings of the FLL is taken from: https://github.com/yuzhiyang123/FL-BNN
 
+from datetime import datetime
 from tqdm import tqdm
 import os
 import torch
@@ -56,15 +57,15 @@ class Server():
         self.val_loader = torch.utils.data.DataLoader(
             val_data,
             batch_size=1024, shuffle=False,
-            num_workers=2, pin_memory=torch.cuda.is_available())
+            num_workers=8, pin_memory=torch.cuda.is_available())
 
 
     def val(self, val_loader):
         self.model.eval()
         num_classes = 10
         metrics = {
-                "accuracy": MulticlassAccuracy(num_classes=num_classes, average='micro').to(self.device),
-                "top_5_accuracy": MulticlassAccuracy(num_classes=num_classes, top_k=5).to(self.device),
+                "val_acc_1": MulticlassAccuracy(num_classes=num_classes, average='micro').to(self.device),
+                "val_acc_5": MulticlassAccuracy(num_classes=num_classes, top_k=5).to(self.device),
                 "precision_macro": MulticlassPrecision(num_classes=num_classes, average='macro').to(self.device),
                 "recall_macro": MulticlassRecall(num_classes=num_classes, average='macro').to(self.device),
                 "f1_score_micro": MulticlassF1Score(num_classes=num_classes, average='micro').to(self.device),
@@ -95,7 +96,6 @@ class Server():
         return final_metrics
 
     def copy_to_full(self):
-        # torch.save(self.model, 'model.pth')
         self.args.alpha = 1
         self.args.workmode = 'fullfull'
 
@@ -193,6 +193,7 @@ class Server():
                 
 
     def train_epoch(self, epoch):
+        start_time = datetime.now()
         # define metrics collectors
         sigma = self.args.alpha
         mode = self.args.workmode
@@ -200,7 +201,7 @@ class Server():
         traintop1 = AverageMeter()
         traintop5 = AverageMeter()
 
-        print(f"\n-- Training Epoch {epoch} --")
+        print(f"\n-- Training Epoch {epoch+1} --")
         clients_iterator = tqdm(range(self.numclients), desc='Training Clients', dynamic_ncols=True) if self.args.tqdm_mode == 'local' else range(self.numclients)
 
         # train clients over 1 epoch
@@ -222,11 +223,13 @@ class Server():
             client.localupdate(self.model.state_dict(), sigma=sigma, mode=mode)
         
         # calculate and save metrics
-        training_metrics = self.val(self.val_loader)
+        training_metrics={}
         training_metrics['epoch'] = epoch+1 
+        training_metrics['epoch_duration_seconds'] = (datetime.now() - start_time).total_seconds()
         training_metrics['train_loss'] = trainloss.avg
-        training_metrics['train_acc_1'] = traintop1.avg
-        training_metrics['train_acc_5'] = traintop5.avg
+        training_metrics['train_acc_1'] = traintop1.avg / 100
+        training_metrics['train_acc_5'] = traintop5.avg / 100
+        training_metrics.update(self.val(self.val_loader))
         
         # print results
         print(f"\nEpoch {epoch+1} Results:")

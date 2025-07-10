@@ -45,14 +45,10 @@ def parse_arguments():
                         help="The directory to save models to during training. This directory will store folders for trained model, and will contain all checkpoints and the final model for each model. This directory will be contained within the results directory")
 
     parser.add_argument('--input_size', type=int, default=28, help='image input size')
-    parser.add_argument('--model_config', default='', help='additional architecture configuration')
     parser.add_argument('--type', default='torch.cuda.FloatTensor' if torch.cuda.is_available() else torch.Tensor, help='type of tensor - e.g torch.cuda.HalfTensor')
-    parser.add_argument('--gpus', default='0', help='gpus used for training - e.g 0,1,3')
 # Setting the argument num_workers as a positive integer will turn on multi-process
 # data loading in torch.utils.data.DataLoader with the specified number of loader
 # worker processes:
-    parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
-                    help='number of data loading workers (default: 4)')
     parser.add_argument('--epochs', default=10, type=int, metavar='N',
                     help='number of total epochs to run')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
@@ -67,19 +63,11 @@ def parse_arguments():
                     help='momentum')
     parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
-    parser.add_argument('--print-freq', '-p', default=10, type=int,
-                    metavar='N', help='print frequency (default: 10)')
-    parser.add_argument('--resume', default='', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
-    parser.add_argument('-e', '--evaluate', type=str, metavar='FILE',
-                    help='evaluate model FILE on validation set')
     parser.add_argument('-n', '--numclients', type=int, default=4,
                     help='number of clients')
 
     parser.add_argument('--workmode', type=str, default='fullfull',
                     help='system working mode')
-    parser.add_argument('--alpha', type=float, default=0.2,
-                    help='client parameters updating algorithm')
 
     parser.add_argument('--tqdm_mode', '-tqdm', type=str, choices=['global', 'local'], help='Use tqdm progress bar during training to show global training progress.')
     

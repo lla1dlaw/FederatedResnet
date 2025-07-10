@@ -21,14 +21,14 @@ class Client():
         self.device = args.device
         model_config = []
         if self.args.model == "ComplexResNet":
-            self.model = ComplexResNet(self.args.arch, self.args.act, self.args.learn_imag)
+            self.model = torch.compile(ComplexResNet(self.args.arch, self.args.act, self.args.learn_imag))
             model_config.append(self.args.model)
             model_config.append(self.args.arch)
             model_config.append(self.args.act)
             model_config.append(self.args.learn_imag)
 
         else: # defaults to RealResNet
-            self.model = RealResNet(self.args.arch)
+            self.model = torch.compile(RealResNet(self.args.arch))
             model_config.append(self.args.model)
             model_config.append(self.args.arch)
 
@@ -55,7 +55,7 @@ class Client():
         self.train_loader = torch.utils.data.DataLoader(
             train_data,
             batch_size=self.args.batch_size, shuffle=True,
-            num_workers=2, pin_memory=torch.cuda.is_available())
+            num_workers=8, pin_memory=torch.cuda.is_available())
 
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.9, nesterov=True)
 
@@ -68,7 +68,7 @@ class Client():
         self.regime = regime
         self.save_path = save_path
 
-    def train(self, epoch):
+    def train(self):
         # switch to train mode
         self.model.train()
         losses = AverageMeter()
@@ -100,9 +100,9 @@ class Client():
     
     def train_epoch(self, epoch):
         self.optimizer = adjust_optimizer(self.optimizer, epoch, self.regime)
-        return self.train(epoch)
+        return self.train()
 
-    def val(self, val_loader, epoch=0):
+    def val(self, val_loader):
         self.model.eval()
         losses = AverageMeter()
         top1 = AverageMeter()
