@@ -15,9 +15,9 @@ def parse_arguments():
     # --- Model Configuration ---
     parser.add_argument('--model', '-a', metavar='MODEL', required=True, choices=['RealResNet', 'ComplexResNet'],
                         help='Model architecture to train.')
-    parser.add_argument('--architecture_type', '-arch', metavar='ARCH', required=True, type=str, choices=['WS', 'DN', 'IB'],
+    parser.add_argument('--arch', '-arch', metavar='ARCH', required=True, type=str, choices=['WS', 'DN', 'IB'],
                         help="The architecture type (e.g., 'WS', 'DN', 'IB').")
-    parser.add_argument('--complex_activations', '-act', metavar='ACT', type=str, default='crelu', choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'],
+    parser.add_argument('--act', '-act', metavar='ACT', type=str, default='crelu', choices=['crelu', 'zrelu', 'modrelu', 'complex_cardioid'],
                         help="Activation function for ComplexResNet.")
     parser.add_argument('--learn_imaginary', '-learn_imag', action='store_true',
                         help='Enable learning the imaginary component for ComplexResNet.')
@@ -75,9 +75,9 @@ def main():
     if not args.save:
         if args.model == 'ComplexResNet':
             imag_str = 'learn_imag' if args.learn_imaginary else 'zero_imag'
-            args.save = f"{args.model}-{args.architecture_type}-{args.complex_activations}-{args.numclients}_clients-{args.aggregation_strategy}-{imag_str}"
+            args.save = f"{args.model}-{args.arch}-{args.act}-{args.numclients}_clients-{args.aggregation_strategy}-{imag_str}"
         else: # RealResNet
-            args.save = f"{args.model}-{args.architecture_type}-{args.numclients}_clients-{args.aggregation_strategy}"
+            args.save = f"{args.model}-{args.arch}-{args.numclients}_clients-{args.aggregation_strategy}"
 
     if args.num_saves > 0 and args.epochs > 0:
         args.save_frequency = max(1, args.epochs // args.num_saves)
