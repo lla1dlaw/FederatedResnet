@@ -21,7 +21,7 @@ def parse_arguments():
                         help="Activation function for ComplexResNet.")
     parser.add_argument('--learn_imaginary', '-learn_imag', action='store_true',
                         help='Enable learning the imaginary component for ComplexResNet.')
-    parser.add_argument('--aggregation_strategy', '-agg', type=str, default='arithmetic', choices=['arithmetic', 'circular', 'hybrid'],
+    parser.add_argument('--agg', '-agg', type=str, default='arithmetic', choices=['arithmetic', 'circular', 'hybrid'],
                         help='Server parameter aggregation strategy.')
     parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
                         help='optimizer function used')
@@ -81,9 +81,9 @@ def main():
     if not args.save:
         if args.model == 'ComplexResNet':
             imag_str = 'learn_imag' if args.learn_imaginary else 'zero_imag'
-            args.save = f"{args.model}-{args.arch}-{args.act}-{args.numclients}_clients-{args.aggregation_strategy}-{imag_str}"
+            args.save = f"{args.model}-{args.arch}-{args.act}-{args.numclients}_clients-{args.agg}-{imag_str}"
         else: # RealResNet
-            args.save = f"{args.model}-{args.arch}-{args.numclients}_clients-{args.aggregation_strategy}"
+            args.save = f"{args.model}-{args.arch}-{args.numclients}_clients-{args.agg}"
 
     if args.num_saves > 0 and args.epochs > 0:
         args.save_frequency = max(1, args.epochs // args.num_saves)
