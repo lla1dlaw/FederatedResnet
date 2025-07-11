@@ -154,7 +154,7 @@ def adjust_optimizer(optimizer, epoch, config):
         for e in range(epoch + 1):  # run over all epochs - sticky setting
             if e in config:
                 optimizer = modify_optimizer(optimizer, config[e])
-    adjust_learning_rate(optimizer, epoch) # adjust the learning rate to the learning rate schedule based on the epoch
+#    adjust_learning_rate(optimizer, epoch) # adjust the learning rate to the learning rate schedule based on the epoch
     return optimizer
 
 
