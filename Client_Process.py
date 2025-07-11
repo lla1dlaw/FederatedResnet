@@ -47,7 +47,7 @@ class Client():
             batch_size=self.args.batch_size, shuffle=True,
             num_workers=4, pin_memory=torch.cuda.is_available())
 
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.9, nesterov=True)
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.9, nesterov=True, weight_decay=1e-4)
 
 
         self.model = self.model.to(self.device)
