@@ -92,8 +92,8 @@ class Server():
 
             final_metrics = {key: metric.compute().item() for key, metric in metrics.items()}
 
-        final_metrics['val_loss'] = losses.avg
-        return final_metrics
+        res = {'val_loss': losses.avg, **final_metrics}
+        return res
 
     def copy_to_full(self):
         self.args.alpha = 1
