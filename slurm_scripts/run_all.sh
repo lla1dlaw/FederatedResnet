@@ -8,7 +8,7 @@ set -e
 CLIENTS=10
 EPOCHS=200
 ACTIVATION="crelu"
-TRIALS=10 # Set the number of trials for all experiments
+TRIALS=5 # Set the number of trials for all experiments
 
 echo "Submitting jobs for WS, DN, and IB architectures..."
 echo "Clients per job: ${CLIENTS}"
@@ -19,8 +19,8 @@ echo ""
 
 # Submit one job array for each architecture, now including the number of trials
 sbatch run_experiment.sh WS $CLIENTS $EPOCHS $ACTIVATION $TRIALS
-sbatch run_experiment.sh DN $CLIENTS $EPOCHS $ACTIVATION $TRIALS
-sbatch run_experiment.sh IB $CLIENTS $EPOCHS $ACTIVATION $TRIALS
+#sbatch run_experiment.sh DN $CLIENTS $EPOCHS $ACTIVATION $TRIALS
+#sbatch run_experiment.sh IB $CLIENTS $EPOCHS $ACTIVATION $TRIALS
 
 echo ""
 echo "All jobs have been submitted to the SLURM scheduler."
