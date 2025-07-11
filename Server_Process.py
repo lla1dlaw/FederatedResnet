@@ -157,30 +157,72 @@ class Server():
 
     def aggregate_clients(self, strategy: str) -> dict[str, torch.Tensor]:
         """
-        Aggregates the parameters from all clients using a strategy that is
-        sensitive to the parameter's data type.
+        Aggregates client parameters with strategy aware of complexPyTorch's structure.
+        Manually reconstructs complex tensors before applying circular/hybrid averaging.
         """
+        if strategy == 'arithmetic':
+            return self.aggregate_clients_arithmetic() # Assumes you rename the old simple loop
+
         global_dict = self.model.state_dict()
+        client_state_dicts = [c.model.state_dict() for c in self.clients]
+        processed_keys = set()
 
         for k in global_dict.keys():
-            client_tensors = [self.clients[i].model.state_dict()[k] for i in range(self.numclients)]
+            if k in processed_keys:
+                continue
 
-            # Check if the tensor is complex and the strategy is circular or hybrid
-            if strategy in ['circular', 'hybrid'] and torch.is_complex(client_tensors[0]):
-                if strategy == 'circular':
-                    print(f"Averaging strategy for {k}: Circular Mean")
-                    global_dict[k] = self.circular_mean(client_tensors)
-                else: # strategy == 'hybrid'
-                    print(f"Averaging strategy for {k}: Hybrid Mean")
-                    global_dict[k] = self.hybrid_mean(client_tensors)
-            else:
-                # Default to arithmetic mean for real tensors or if strategy is 'arithmetic'
-                if strategy != 'arithmetic':
-                    print(f"Defaulting to Arithmetic Mean for real-valued tensor: {k}")
-                global_dict[k] = self.arithmetic_mean(client_tensors)
+            # Check if the key corresponds to the real part of a complex layer's parameter
+            is_weight = k.endswith(('.conv_r.weight', '.fc_r.weight'))
+            is_bias = k.endswith(('.conv_r.bias', '.fc_r.bias'))
+
+            if is_weight or is_bias:
+                # Find the corresponding key for the imaginary part
+                imag_k = k.replace('.conv_r.', '.conv_i.').replace('.fc_r.', '.fc_i.')
+                
+                # Ensure the imaginary counterpart exists in the state_dict
+                if imag_k in global_dict:
+                    # --- This block handles Complex Parameters ---
+                    print(f"Applying '{strategy}' aggregation to complex parameter: {k.rsplit('.', 2)[0]}")
+
+                    # Reconstruct complex tensors from all clients for this layer
+                    client_complex_tensors = []
+                    for csd in client_state_dicts:
+                        real_part = csd[k]
+                        imag_part = csd[imag_k] if imag_k in csd else torch.zeros_like(real_part)
+                        client_complex_tensors.append(torch.complex(real_part, imag_part))
+
+                    # Apply the appropriate complex aggregation function
+                    if strategy == 'circular':
+                        aggregated_complex = self.circular_mean(client_complex_tensors)
+                    else: # 'hybrid'
+                        aggregated_complex = self.hybrid_mean(client_complex_tensors)
+                    
+                    # Split the aggregated complex tensor back into real and imaginary parts
+                    global_dict[k] = aggregated_complex.real
+                    global_dict[imag_k] = aggregated_complex.imag
+                    
+                    # Mark both keys as processed to avoid redundant work
+                    processed_keys.add(k)
+                    processed_keys.add(imag_k)
+                    continue
+
+            # --- This block handles all other Real-Valued Parameters ---
+            # (e.g., BatchNorm layers, or if imaginary part wasn't found)
+            # print(f"Applying 'arithmetic' aggregation to real parameter: {k}") # Optional: for debugging
+            client_tensors = [csd[k] for csd in client_state_dicts]
+            global_dict[k] = self.arithmetic_mean(client_tensors)
+            processed_keys.add(k)
 
         return global_dict
-                
+
+    # It's good practice to create a separate function for the simple arithmetic case
+    def aggregate_clients_arithmetic(self) -> dict[str, torch.Tensor]:
+        """Helper function for simple arithmetic aggregation."""
+        global_dict = self.model.state_dict()
+        for k in global_dict.keys():
+            client_tensors = [self.clients[i].model.state_dict()[k] for i in range(self.numclients)]
+            global_dict[k] = self.arithmetic_mean(client_tensors)
+        return global_dict
 
     def train_epoch(self, epoch):
         start_time = datetime.now()
