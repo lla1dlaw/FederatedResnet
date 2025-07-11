@@ -44,7 +44,7 @@ class Client():
         self.train_loader = torch.utils.data.DataLoader(
             train_data,
             batch_size=self.args.batch_size, shuffle=True,
-            num_workers=8, pin_memory=torch.cuda.is_available())
+            num_workers=4, pin_memory=torch.cuda.is_available())
 
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.args.lr, momentum=0.9, nesterov=True)
 

@@ -57,7 +57,7 @@ class Server():
         self.val_loader = torch.utils.data.DataLoader(
             val_data,
             batch_size=1024, shuffle=False,
-            num_workers=8, pin_memory=torch.cuda.is_available())
+            num_workers=4, pin_memory=torch.cuda.is_available())
 
 
     def val(self, val_loader):
