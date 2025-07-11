@@ -65,7 +65,7 @@ class Server():
         num_classes = 10
         metrics = {
                 "val_acc_1": MulticlassAccuracy(num_classes=num_classes, average='micro').to(self.device),
-                "val_acc_5": MulticlassAccuracy(num_classes=num_classes, top_k=5).to(self.device),
+                "val_acc_5": MulticlassAccuracy(num_classes=num_classes, average='micro', top_k=5).to(self.device),
                 "precision_macro": MulticlassPrecision(num_classes=num_classes, average='macro').to(self.device),
                 "recall_macro": MulticlassRecall(num_classes=num_classes, average='macro').to(self.device),
                 "f1_score_micro": MulticlassF1Score(num_classes=num_classes, average='micro').to(self.device),

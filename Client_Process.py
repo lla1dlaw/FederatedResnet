@@ -7,6 +7,7 @@ import torch.nn as nn
 from utils import *
 import copy
 from models import ComplexResNet, RealResNet
+from torchmetrics.classification import MulticlassAccuracy
 
 class Client():
     def __init__(self, clientid, train_data, args, proportion=0.01, init_model=None):
@@ -61,8 +62,8 @@ class Client():
         # switch to train mode
         self.model.train()
         losses = AverageMeter()
-        top1 = AverageMeter()
-        top5 = AverageMeter()
+        top1 = MulticlassAccuracy(num_classes=10, average='micro').to(self.device)
+        top5 = MulticlassAccuracy(num_classes=10, average='micro', topk=5).to(self.device)
         for _, (inputs, target) in enumerate(self.train_loader):
 
             if target.size(0) == 1:
@@ -74,17 +75,17 @@ class Client():
                 output = output
 
             # measure accuracy and record loss
-            prec1, prec5 = accuracy(output.data, target, topk=(1, 2))
             losses.update(loss.item(), inputs.size(0))
-            top1.update(prec1.item(), inputs.size(0))
-            top5.update(prec5.item(), inputs.size(0))
+            top1.update(output, target)
+            top5.update(output, target)
 
             # compute gradient and optimize
             self.optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0) # clip gradients to avoid explosion
             self.optimizer.step()
        
-        return losses.avg, top1.avg, top5.avg
+        return losses.avg, top1.compute().item(), top5.compute().item()
 
     
     def train_epoch(self, epoch):
@@ -96,7 +97,7 @@ class Client():
         losses = AverageMeter()
         top1 = AverageMeter()
         top5 = AverageMeter()
-        for i, (inputs, target) in enumerate(val_loader):
+        for _, (inputs, target) in enumerate(val_loader):
             target = target.to(self.device)
 
             with torch.no_grad():
