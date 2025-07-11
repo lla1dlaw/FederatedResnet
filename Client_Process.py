@@ -63,7 +63,7 @@ class Client():
         self.model.train()
         losses = AverageMeter()
         top1 = MulticlassAccuracy(num_classes=10, average='micro').to(self.device)
-        top5 = MulticlassAccuracy(num_classes=10, average='micro', topk=5).to(self.device)
+        top5 = MulticlassAccuracy(num_classes=10, average='micro', top_k=5).to(self.device)
         for _, (inputs, target) in enumerate(self.train_loader):
 
             if target.size(0) == 1:
