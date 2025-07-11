@@ -87,7 +87,7 @@ if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
   python ../main.py \
     --model ComplexResNet \
     --arch $ARCH \
-    --complex_activations $ACTIVATION \
+    --act $ACTIVATION \
     --agg $AGG \
     --learn_imaginary \
     --numclients $CLIENTS \
