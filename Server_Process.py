@@ -156,38 +156,28 @@ class Server():
 
 
     def aggregate_clients(self, strategy: str) -> dict[str, torch.Tensor]:
-        """Aggregates the parameters from all clients.
-
-        Uses the specified strategy to aggregate client's parameters. 
-
-        Args:
-            strategy: A string representing the averaging teqnique used to aggregate client parameters. 
-
-        Returns:
-            The state dictionary of the new glbal model.
         """
-        
+        Aggregates the parameters from all clients using a strategy that is
+        sensitive to the parameter's data type.
+        """
         global_dict = self.model.state_dict()
 
-        if strategy == 'arithmetic':
-            for k in global_dict.keys():
-                client_tensors = [self.clients[i].model.state_dict()[k] for i in range(self.numclients)]
+        for k in global_dict.keys():
+            client_tensors = [self.clients[i].model.state_dict()[k] for i in range(self.numclients)]
+
+            # Check if the tensor is complex and the strategy is circular or hybrid
+            if strategy in ['circular', 'hybrid'] and torch.is_complex(client_tensors[0]):
+                if strategy == 'circular':
+                    print(f"Averaging strategy for {k}: Circular Mean")
+                    global_dict[k] = self.circular_mean(client_tensors)
+                else: # strategy == 'hybrid'
+                    print(f"Averaging strategy for {k}: Hybrid Mean")
+                    global_dict[k] = self.hybrid_mean(client_tensors)
+            else:
+                # Default to arithmetic mean for real tensors or if strategy is 'arithmetic'
+                if strategy != 'arithmetic':
+                    print(f"Defaulting to Arithmetic Mean for real-valued tensor: {k}")
                 global_dict[k] = self.arithmetic_mean(client_tensors)
-        
-        elif strategy == 'circular':
-            print("Averaging strategy: Circular Mean")
-            for k in global_dict.keys():
-                client_tensors = [self.clients[i].model.state_dict()[k] for i in range(self.numclients)]
-                global_dict[k] = self.circular_mean(client_tensors)
-
-        elif strategy == 'hybrid':
-            print("Averaging strategy: Hybrid Mean")
-            for k in global_dict.keys():
-                client_tensors = [self.clients[i].model.state_dict()[k] for i in range(self.numclients)]
-                global_dict[k] = self.hybrid_mean(client_tensors)
-
-        else:
-            raise ValueError(f"Unknown averaging strategy: {strategy}")
 
         return global_dict
                 
