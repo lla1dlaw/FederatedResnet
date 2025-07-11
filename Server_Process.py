@@ -33,11 +33,11 @@ class Server():
 
         model_config = []
         if self.args.model == "ComplexResNet":
-            self.model = ComplexResNet(self.args.arch, self.args.act, self.args.learn_imag)
+            self.model = ComplexResNet(self.args.arch, self.args.act, self.args.learn_imaginary)
             model_config.append(self.args.model)
             model_config.append(self.args.arch)
             model_config.append(self.args.act)
-            model_config.append(self.args.learn_imag)
+            model_config.append(self.args.learn_imaginary)
 
         else: # defualts to RealResNet
             self.model = RealResNet(self.args.arch)
