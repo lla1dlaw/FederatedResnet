@@ -227,8 +227,8 @@ class Server():
         training_metrics['epoch'] = epoch+1 
         training_metrics['epoch_duration_seconds'] = (datetime.now() - start_time).total_seconds()
         training_metrics['train_loss'] = trainloss.avg
-        training_metrics['train_acc_1'] = traintop1.avg / 100
-        training_metrics['train_acc_5'] = traintop5.avg / 100
+        training_metrics['train_acc_1'] = traintop1.avg
+        training_metrics['train_acc_5'] = traintop5.avg
         training_metrics.update(self.val(self.val_loader))
         
         # print results
