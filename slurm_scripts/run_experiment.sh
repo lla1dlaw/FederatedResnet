@@ -74,7 +74,8 @@ python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f
 echo "---------------------------"
 
 # --- EXPERIMENT CONFIGURATION ---
-AGGREGATIONS=("arithmetic" "circular" "hybrid")
+# AGGREGATIONS=("arithmetic" "circular" "hybrid")
+AGGREGATIONS=("arithmetic")
 
 # --- JOB EXECUTION ---
 if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
