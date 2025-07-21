@@ -75,7 +75,7 @@ echo "---------------------------"
 
 # --- EXPERIMENT CONFIGURATION ---
 # AGGREGATIONS=("arithmetic" "circular" "hybrid")
-AGGREGATIONS=("arithmetic")
+AGGREGATIONS=("hybrid")
 
 # --- JOB EXECUTION ---
 if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
@@ -98,18 +98,18 @@ if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
 
 else
   # --- Run RealResNet (Job 4) ---
-  AGG="arithmetic"
-
-  echo "Running RealResNet: Arch=${ARCH}, Aggregation=${AGG}"
-
-  python ../main.py \
-    --model RealResNet \
-    --arch $ARCH \
-    --agg $AGG \
-    --numclients $CLIENTS \
-    --epochs $EPOCHS \
-    --num_trials $TRIALS \
-    --tqdm_mode local
+#  AGG="arithmetic"
+#
+#  echo "Running RealResNet: Arch=${ARCH}, Aggregation=${AGG}"
+#
+#  python ../main.py \
+#    --model RealResNet \
+#    --arch $ARCH \
+#    --agg $AGG \
+#    --numclients $CLIENTS \
+#    --epochs $EPOCHS \
+#    --num_trials $TRIALS \
+#    --tqdm_mode local
 fi
 
 echo "Job finished successfully."

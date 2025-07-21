@@ -273,3 +273,36 @@ class Server():
         self.results.add(**training_metrics)
         self.results.save()
 
+def circular_mean(tensors: list[torch.Tensor]) -> torch.Tensor:
+    """Computes the circular mean of a list of complex tensors."""
+    normalized_tensors = []
+    for t in tensors:
+        t_abs = torch.abs(t)
+        # Avoid division by zero; a zero vector has no direction.
+        unit_tensor = torch.where(t_abs > 0, t / t_abs, t)
+        normalized_tensors.append(unit_tensor)
+    
+    return torch.stack(normalized_tensors, dim=0).mean(dim=0)
+
+def hybrid_mean(tensors: list[torch.Tensor]) -> torch.Tensor:
+    """Computes the hybrid (magnitude + circular-angle) mean."""
+    # 1. Arithmetic mean of magnitudes
+    magnitudes = [torch.abs(t) for t in tensors]
+    mean_magnitude = torch.stack(magnitudes, dim=0).mean(dim=0)
+
+    # 2. Circular mean for average direction
+    circ_mean_vec = self.circular_mean(tensors)
+    circ_mean_abs = torch.abs(circ_mean_vec)
+    
+    # 3. Reconstruct by scaling the average direction unit vector
+    # by the average magnitude.
+    avg_direction_unit_vec = torch.where(
+        circ_mean_abs > 0, circ_mean_vec / circ_mean_abs, circ_mean_vec
+    )
+    return mean_magnitude * avg_direction_unit_vec
+
+
+def arithmetic_mean(tensors: list[torch.Tensor]) -> torch.Tensor:
+    "Computs the arithmetic (element-wise) mean."
+    return torch.stack(tensors, 0).mean(0)
+

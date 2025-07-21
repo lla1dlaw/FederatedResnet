@@ -58,7 +58,7 @@ def gather_all_summaries(parent: str='./', summary_filename: str='summary.csv'):
     return summaries
 
 
-def plot_dataframes(dataframe_dict, metrics, plot_title, marker_frequency=20, y_limit=(0.0, 1.0), y_tick_interval=0.05):
+def plot_dataframes(dataframe_dict, metrics, plot_title, marker_frequency=20, y_limit=(0.0, 1.02), y_tick_interval=0.05):
     """
     Plots corresponding values from a dictionary of pandas DataFrames.
 
@@ -71,7 +71,7 @@ def plot_dataframes(dataframe_dict, metrics, plot_title, marker_frequency=20, y_
     plt.style.use('seaborn-v0_8-whitegrid')
     fig, ax = plt.subplots(figsize=(12, 7))
 
-    colors = ['red', 'blue', 'green', 'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan']
+    colors = ['blue', 'red', 'green', 'purple', 'orange', 'brown', 'pink', 'gray', 'olive', 'cyan']
     marker_styles = ['o', 's', 'D', '^', 'v', 'p', '*', 'X']
 
     for i, (df_name, df) in enumerate(dataframe_dict.items()):
