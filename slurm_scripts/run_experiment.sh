@@ -77,27 +77,37 @@ echo "---------------------------"
 # AGGREGATIONS=("arithmetic" "circular" "hybrid")
 AGGREGATIONS=("hybrid")
 
+python ../main.py \
+  --model ComplexResNet \
+  --arch WS \
+  --act crelu \
+  --agg hybrid \
+  --learn_imaginary \
+  --numclients 10 \
+  --epochs 200 \
+  --num_trials 5 \
+  --tqdm_mode local
 # --- JOB EXECUTION ---
-if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
-  # --- Run ComplexResNet Permutations (Jobs 1-3) ---
-  AGG_INDEX=$((SLURM_ARRAY_TASK_ID - 1))
-  AGG=${AGGREGATIONS[$AGG_INDEX]}
+#if [ $SLURM_ARRAY_TASK_ID -le 3 ]; then
+# --- Run ComplexResNet Permutations (Jobs 1-3) ---
+#  AGG_INDEX=$((SLURM_ARRAY_TASK_ID - 1))
+#  AGG=${AGGREGATIONS[$AGG_INDEX]}
+#
+#  echo "Running ComplexResNet: Arch=${ARCH}, Activation=${ACTIVATION}, Aggregation=${AGG}"
+#
+#  python ../main.py \
+#    --model ComplexResNet \
+#    --arch $ARCH \
+#    --act $ACTIVATION \
+#    --agg $AGG \
+#    --learn_imaginary \
+#    --numclients $CLIENTS \
+#    --epochs $EPOCHS \
+#    --num_trials $TRIALS \
+#    --tqdm_mode local
 
-  echo "Running ComplexResNet: Arch=${ARCH}, Activation=${ACTIVATION}, Aggregation=${AGG}"
-
-  python ../main.py \
-    --model ComplexResNet \
-    --arch $ARCH \
-    --act $ACTIVATION \
-    --agg $AGG \
-    --learn_imaginary \
-    --numclients $CLIENTS \
-    --epochs $EPOCHS \
-    --num_trials $TRIALS \
-    --tqdm_mode local
-
-else
-  # --- Run RealResNet (Job 4) ---
+#else
+# --- Run RealResNet (Job 4) ---
 #  AGG="arithmetic"
 #
 #  echo "Running RealResNet: Arch=${ARCH}, Aggregation=${AGG}"
@@ -110,6 +120,6 @@ else
 #    --epochs $EPOCHS \
 #    --num_trials $TRIALS \
 #    --tqdm_mode local
-fi
+#fi
 
 echo "Job finished successfully."
